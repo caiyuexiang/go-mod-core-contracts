@@ -10,24 +10,22 @@ const (
 	ApiVersion = "v2"
 	ApiBase    = "/api/v2"
 
-	ApiEventRoute              = ApiBase + "/event"
-	ApiAllEventRoute           = ApiEventRoute + "/" + All
-	ApiEventIdRoute            = ApiEventRoute + "/" + Id + "/{" + Id + "}"
-	ApiEventPushRoute          = ApiEventRoute + "/" + Pushed
-	ApiEventCountRoute         = ApiEventRoute + "/" + Count
-	ApiEventCountByDeviceRoute = ApiEventCountRoute + "/" + Device + "/{" + DeviceName + "}"
-	ApiEventByDeviceNameRoute  = ApiEventRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
-	ApiEventByTimeRangeRoute   = ApiEventRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
-	ApiEventByAgeRoute         = ApiEventRoute + "/" + Age + "/{" + Age + "}"
-	ApiEventScrubRoute         = ApiEventRoute + "/" + Scrub
+	ApiEventRoute                  = ApiBase + "/event"
+	ApiAllEventRoute               = ApiEventRoute + "/" + All
+	ApiEventIdRoute                = ApiEventRoute + "/" + Id + "/{" + Id + "}"
+	ApiEventCountRoute             = ApiEventRoute + "/" + Count
+	ApiEventCountByDeviceNameRoute = ApiEventCountRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiEventByDeviceNameRoute      = ApiEventRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiEventByTimeRangeRoute       = ApiEventRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
+	ApiEventByAgeRoute             = ApiEventRoute + "/" + Age + "/{" + Age + "}"
 
-	ApiReadingRoute             = ApiBase + "/reading"
-	ApiAllReadingRoute          = ApiReadingRoute + "/" + All
-	ApiReadingCountRoute        = ApiReadingRoute + "/" + Count
-	ApiReadingIdRoute           = ApiReadingRoute + "/" + Id + "/{" + Id + "}"
-	ApiReadingByDeviceNameRoute = ApiReadingRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
-	ApiReadingByTypeRoute       = ApiReadingRoute + "/" + Type + "/{" + Type + "}"
-	ApiReadingByTimeRangeRoute  = ApiReadingRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
+	ApiReadingRoute                  = ApiBase + "/reading"
+	ApiAllReadingRoute               = ApiReadingRoute + "/" + All
+	ApiReadingCountRoute             = ApiReadingRoute + "/" + Count
+	ApiReadingCountByDeviceNameRoute = ApiReadingCountRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiReadingByDeviceNameRoute      = ApiReadingRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiReadingByResourceNameRoute    = ApiReadingRoute + "/" + ResourceName + "/{" + ResourceName + "}"
+	ApiReadingByTimeRangeRoute       = ApiReadingRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
 
 	ApiDeviceProfileRoute                       = ApiBase + "/deviceprofile"
 	ApiDeviceProfileUploadFileRoute             = ApiDeviceProfileRoute + "/uploadfile"
@@ -76,6 +74,7 @@ const (
 	Service      = "service"
 	ProfileName  = "profileName"
 	ServiceName  = "serviceName"
+	ResourceName = "resourceName"
 	Start        = "start"
 	End          = "end"
 	Age          = "age"
@@ -96,4 +95,33 @@ const (
 	DefaultOffset  = 0
 	DefaultLimit   = 20
 	CommaSeparator = ","
+)
+
+// Constants related to Reading ValueTypes
+const (
+	ValueTypeBool         = "Bool"
+	ValueTypeString       = "String"
+	ValueTypeUint8        = "Uint8"
+	ValueTypeUint16       = "Uint16"
+	ValueTypeUint32       = "Uint32"
+	ValueTypeUint64       = "Uint64"
+	ValueTypeInt8         = "Int8"
+	ValueTypeInt16        = "Int16"
+	ValueTypeInt32        = "Int32"
+	ValueTypeInt64        = "Int64"
+	ValueTypeFloat32      = "Float32"
+	ValueTypeFloat64      = "Float64"
+	ValueTypeBinary       = "Binary"
+	ValueTypeBoolArray    = "BoolArray"
+	ValueTypeStringArray  = "StringArray"
+	ValueTypeUint8Array   = "Uint8Array"
+	ValueTypeUint16Array  = "Uint16Array"
+	ValueTypeUint32Array  = "Uint32Array"
+	ValueTypeUint64Array  = "Uint64Array"
+	ValueTypeInt8Array    = "Int8Array"
+	ValueTypeInt16Array   = "Int16Array"
+	ValueTypeInt32Array   = "Int32Array"
+	ValueTypeInt64Array   = "Int64Array"
+	ValueTypeFloat32Array = "Float32Array"
+	ValueTypeFloat64Array = "Float64Array"
 )

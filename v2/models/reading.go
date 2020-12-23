@@ -9,13 +9,13 @@ package models
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-data/2.x#/BaseReading
 // Model fields are same as the DTOs documented by this swagger. Exceptions, if any, are noted below.
 type BaseReading struct {
-	Id         string
-	Created    int64
-	Origin     int64
-	DeviceName string
-	Name       string
-	Labels     []string
-	ValueType  string
+	Id           string
+	Created      int64
+	Origin       int64
+	DeviceName   string
+	ResourceName string
+	ProfileName  string
+	ValueType    string
 }
 
 // BinaryReading and its properties are defined in the APIv2 specification:
@@ -31,9 +31,8 @@ type BinaryReading struct {
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-data/2.x#/SimpleReading
 // Model fields are same as the DTOs documented by this swagger. Exceptions, if any, are noted below.
 type SimpleReading struct {
-	BaseReading   `json:",inline"`
-	Value         string
-	FloatEncoding string
+	BaseReading `json:",inline"`
+	Value       string
 }
 
 // Reading is an abstract interface to be implemented by BinaryReading/SimpleReading

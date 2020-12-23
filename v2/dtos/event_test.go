@@ -17,11 +17,11 @@ import (
 )
 
 var valid = models.Event{
-	Id:         TestUUID,
-	Pushed:     TestTimestamp,
-	DeviceName: TestDeviceName,
-	Created:    TestTimestamp,
-	Origin:     TestTimestamp,
+	Id:          TestUUID,
+	DeviceName:  TestDeviceName,
+	ProfileName: TestDeviceProfileName,
+	Created:     TestTimestamp,
+	Origin:      TestTimestamp,
 	Tags: map[string]string{
 		"GatewayID": "Houston-0001",
 		"Latitude":  "29.630771",
@@ -32,8 +32,8 @@ var valid = models.Event{
 var expectedDTO = Event{
 	Versionable: common.Versionable{ApiVersion: v2.ApiVersion},
 	Id:          TestUUID,
-	Pushed:      TestTimestamp,
 	DeviceName:  TestDeviceName,
+	ProfileName: TestDeviceProfileName,
 	Created:     TestTimestamp,
 	Origin:      TestTimestamp,
 	Tags: map[string]string{
@@ -61,7 +61,7 @@ func TestFromEventModelToDTO(t *testing.T) {
 func TestEvent_ToXML(t *testing.T) {
 	// Since the order in map is random we have to verify the individual items exists without depending on order
 	contains := []string{
-		"<Event><ApiVersion>v2</ApiVersion><Id>7a1707f0-166f-4c4b-bc9d-1d54c74e0137</Id><Pushed>1594963842</Pushed><DeviceName>TestDevice</DeviceName><Created>1594963842</Created><Origin>1594963842</Origin><Tags>",
+		"<Event><ApiVersion>v2</ApiVersion><Id>7a1707f0-166f-4c4b-bc9d-1d54c74e0137</Id><DeviceName>TestDevice</DeviceName><ProfileName>TestDeviceProfileName</ProfileName><Created>1594963842</Created><Origin>1594963842</Origin><Tags>",
 		"<GatewayID>Houston-0001</GatewayID>",
 		"<Latitude>29.630771</Latitude>",
 		"<Longitude>-95.377603</Longitude>",
