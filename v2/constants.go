@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,14 +10,15 @@ const (
 	ApiVersion = "v2"
 	ApiBase    = "/api/v2"
 
-	ApiEventRoute                  = ApiBase + "/event"
-	ApiAllEventRoute               = ApiEventRoute + "/" + All
-	ApiEventIdRoute                = ApiEventRoute + "/" + Id + "/{" + Id + "}"
-	ApiEventCountRoute             = ApiEventRoute + "/" + Count
-	ApiEventCountByDeviceNameRoute = ApiEventCountRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
-	ApiEventByDeviceNameRoute      = ApiEventRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
-	ApiEventByTimeRangeRoute       = ApiEventRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
-	ApiEventByAgeRoute             = ApiEventRoute + "/" + Age + "/{" + Age + "}"
+	ApiEventRoute                      = ApiBase + "/event"
+	ApiEventProfileNameDeviceNameRoute = ApiEventRoute + "/{" + ProfileName + "}" + "/{" + DeviceName + "}"
+	ApiAllEventRoute                   = ApiEventRoute + "/" + All
+	ApiEventIdRoute                    = ApiEventRoute + "/" + Id + "/{" + Id + "}"
+	ApiEventCountRoute                 = ApiEventRoute + "/" + Count
+	ApiEventCountByDeviceNameRoute     = ApiEventCountRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiEventByDeviceNameRoute          = ApiEventRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiEventByTimeRangeRoute           = ApiEventRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
+	ApiEventByAgeRoute                 = ApiEventRoute + "/" + Age + "/{" + Age + "}"
 
 	ApiReadingRoute                  = ApiBase + "/reading"
 	ApiAllReadingRoute               = ApiReadingRoute + "/" + All
@@ -41,21 +42,49 @@ const (
 	ApiDeviceServiceByNameRoute = ApiDeviceServiceRoute + "/" + Name + "/{" + Name + "}"
 	ApiDeviceServiceByIdRoute   = ApiDeviceServiceRoute + "/" + Id + "/{" + Id + "}"
 
-	ApiDeviceRoute              = ApiBase + "/device"
-	ApiAllDeviceRoute           = ApiDeviceRoute + "/" + All
-	ApiDeviceIdExistsRoute      = ApiDeviceRoute + "/" + Check + "/" + Id + "/{" + Id + "}"
-	ApiDeviceNameExistsRoute    = ApiDeviceRoute + "/" + Check + "/" + Name + "/{" + Name + "}"
-	ApiDeviceByIdRoute          = ApiDeviceRoute + "/" + Id + "/{" + Id + "}"
-	ApiDeviceByNameRoute        = ApiDeviceRoute + "/" + Name + "/{" + Name + "}"
-	ApiDeviceByProfileIdRoute   = ApiDeviceRoute + "/" + Profile + "/" + Id + "/{" + Id + "}"
-	ApiDeviceByProfileNameRoute = ApiDeviceRoute + "/" + Profile + "/" + Name + "/{" + Name + "}"
-	ApiDeviceByServiceIdRoute   = ApiDeviceRoute + "/" + Service + "/" + Id + "/{" + Id + "}"
-	ApiDeviceByServiceNameRoute = ApiDeviceRoute + "/" + Service + "/" + Name + "/{" + Name + "}"
+	ApiDeviceRoute                = ApiBase + "/device"
+	ApiAllDeviceRoute             = ApiDeviceRoute + "/" + All
+	ApiDeviceIdExistsRoute        = ApiDeviceRoute + "/" + Check + "/" + Id + "/{" + Id + "}"
+	ApiDeviceNameExistsRoute      = ApiDeviceRoute + "/" + Check + "/" + Name + "/{" + Name + "}"
+	ApiDeviceByIdRoute            = ApiDeviceRoute + "/" + Id + "/{" + Id + "}"
+	ApiDeviceByNameRoute          = ApiDeviceRoute + "/" + Name + "/{" + Name + "}"
+	ApiDeviceByProfileIdRoute     = ApiDeviceRoute + "/" + Profile + "/" + Id + "/{" + Id + "}"
+	ApiDeviceByProfileNameRoute   = ApiDeviceRoute + "/" + Profile + "/" + Name + "/{" + Name + "}"
+	ApiDeviceByServiceIdRoute     = ApiDeviceRoute + "/" + Service + "/" + Id + "/{" + Id + "}"
+	ApiDeviceByServiceNameRoute   = ApiDeviceRoute + "/" + Service + "/" + Name + "/{" + Name + "}"
+	ApiDeviceNameCommandNameRoute = ApiDeviceByNameRoute + "/{" + Command + "}"
+
+	ApiProvisionWatcherRoute              = ApiBase + "/provisionwatcher"
+	ApiAllProvisionWatcherRoute           = ApiProvisionWatcherRoute + "/" + All
+	ApiProvisionWatcherByIdRoute          = ApiProvisionWatcherRoute + "/" + Id + "/{" + Id + "}"
+	ApiProvisionWatcherByNameRoute        = ApiProvisionWatcherRoute + "/" + Name + "/{" + Name + "}"
+	ApiProvisionWatcherByProfileNameRoute = ApiProvisionWatcherRoute + "/" + Profile + "/" + Name + "/{" + Name + "}"
+	ApiProvisionWatcherByServiceNameRoute = ApiProvisionWatcherRoute + "/" + Service + "/" + Name + "/{" + Name + "}"
+
+	ApiSubscriptionRoute           = ApiBase + "/subscription"
+	ApiAllSubscriptionRoute        = ApiSubscriptionRoute + "/" + All
+	ApiSubscriptionByNameRoute     = ApiSubscriptionRoute + "/" + Name + "/{" + Name + "}"
+	ApiSubscriptionByCategoryRoute = ApiSubscriptionRoute + "/" + Category + "/{" + Category + "}"
+	ApiSubscriptionByLabelRoute    = ApiSubscriptionRoute + "/" + Label + "/{" + Label + "}"
+	ApiSubscriptionByReceiverRoute = ApiSubscriptionRoute + "/" + Receiver + "/{" + Receiver + "}"
 
 	ApiConfigRoute  = ApiBase + "/config"
 	ApiMetricsRoute = ApiBase + "/metrics"
 	ApiPingRoute    = ApiBase + "/ping"
 	ApiVersionRoute = ApiBase + "/version"
+
+	ApiDeviceCallbackRoute      = ApiBase + "/callback/device"
+	ApiDeviceCallbackNameRoute  = ApiBase + "/callback/device/name/{name}"
+	ApiProfileCallbackRoute     = ApiBase + "/callback/profile"
+	ApiProfileCallbackNameRoute = ApiBase + "/callback/profile/name/{name}"
+	ApiWatcherCallbackRoute     = ApiBase + "/callback/watcher"
+	ApiWatcherCallbackNameRoute = ApiBase + "/callback/watcher/name/{name}"
+	ApiServiceCallbackRoute     = ApiBase + "/callback/service"
+	ApiDiscoveryRoute           = ApiBase + "/discovery"
+
+	ApiIntervalRoute       = ApiBase + "/interval"
+	ApiAllIntervalRoute    = ApiIntervalRoute + "/" + All
+	ApiIntervalByNameRoute = ApiIntervalRoute + "/" + Name + "/{" + Name + "}"
 )
 
 // Constants related to defined url path names and parameters in the v2 service APIs
@@ -72,6 +101,7 @@ const (
 	Check        = "check"
 	Profile      = "profile"
 	Service      = "service"
+	Command      = "command"
 	ProfileName  = "profileName"
 	ServiceName  = "serviceName"
 	ResourceName = "resourceName"
@@ -85,9 +115,15 @@ const (
 	Manufacturer = "manufacturer"
 	Model        = "model"
 	ValueType    = "valueType"
-	Offset       = "offset" //query string to specify the number of items to skip before starting to collect the result set.
-	Limit        = "limit"  //query string to specify the numbers of items to return
-	Labels       = "labels" //query string to specify associated user-defined labels for querying a given object. More than one label may be specified via a comma-delimited list
+	Category     = "category"
+	Receiver     = "receiver"
+	Subscription = "subscription"
+
+	Offset      = "offset"         //query string to specify the number of items to skip before starting to collect the result set.
+	Limit       = "limit"          //query string to specify the numbers of items to return
+	Labels      = "labels"         //query string to specify associated user-defined labels for querying a given object. More than one label may be specified via a comma-delimited list
+	PushEvent   = "ds-pushevent"   //query string to specify if an event should be pushed to the EdgeX system
+	ReturnEvent = "ds-returnevent" //query string to specify if an event should be returned from device service
 )
 
 // Constants related to the default value of query strings in the v2 service APIs
@@ -95,6 +131,8 @@ const (
 	DefaultOffset  = 0
 	DefaultLimit   = 20
 	CommaSeparator = ","
+	ValueYes       = "yes"
+	ValueNo        = "no"
 )
 
 // Constants related to Reading ValueTypes

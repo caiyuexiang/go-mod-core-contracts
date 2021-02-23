@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,9 +10,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,9 +21,11 @@ import (
 
 var testAddDeviceService = AddDeviceServiceRequest{
 	BaseRequest: common.BaseRequest{
-		RequestId: ExampleUUID,
+		RequestId:   ExampleUUID,
+		Versionable: common.NewVersionable(),
 	},
 	Service: dtos.DeviceService{
+		Versionable: common.NewVersionable(),
 		Name:        TestDeviceServiceName,
 		BaseAddress: TestBaseAddress,
 		Labels:      []string{"MODBUS", "TEMP"},
@@ -32,7 +35,8 @@ var testAddDeviceService = AddDeviceServiceRequest{
 
 var testUpdateDeviceService = UpdateDeviceServiceRequest{
 	BaseRequest: common.BaseRequest{
-		RequestId: ExampleUUID,
+		RequestId:   ExampleUUID,
+		Versionable: common.NewVersionable(),
 	},
 	Service: mockDeviceServiceDTO(),
 }
@@ -43,6 +47,7 @@ func mockDeviceServiceDTO() dtos.UpdateDeviceService {
 	testBaseAddress := TestBaseAddress
 	testAdminState := models.Locked
 	ds := dtos.UpdateDeviceService{}
+	ds.Versionable = common.NewVersionable()
 	ds.Id = &testUUID
 	ds.Name = &testName
 	ds.BaseAddress = &testBaseAddress
@@ -87,6 +92,21 @@ func TestAddDeviceServiceRequest_Validate(t *testing.T) {
 			err := tt.DeviceService.Validate()
 			assert.Equal(t, tt.expectError, err != nil, "Unexpected addDeviceServiceRequest validation result.", err)
 		})
+	}
+
+	serviceNameWithUnreservedChars := testAddDeviceService
+	serviceNameWithUnreservedChars.Service.Name = nameWithUnreservedChars
+
+	err := serviceNameWithUnreservedChars.Validate()
+	assert.NoError(t, err, fmt.Sprintf("AddDeviceServiceRequest with service name containing unreserved chars %s should pass validation", nameWithUnreservedChars))
+
+	// Following tests verify if service name containing reserved characters should be detected with an error
+	for _, n := range namesWithReservedChar {
+		serviceNameWithReservedChar := testAddDeviceService
+		serviceNameWithReservedChar.Service.Name = n
+
+		err := serviceNameWithReservedChar.Validate()
+		assert.Error(t, err, fmt.Sprintf("AddDeviceServiceRequest with service name containing reserved char %s should return error during validation", n))
 	}
 }
 
@@ -225,6 +245,21 @@ func TestUpdateDeviceServiceRequest_Validate(t *testing.T) {
 			assert.Equal(t, tt.expectError, err != nil, "Unexpected updateDeviceServiceRequest validation result.", err)
 		})
 	}
+
+	serviceNameWithUnreservedChars := testUpdateDeviceService
+	serviceNameWithUnreservedChars.Service.Name = &nameWithUnreservedChars
+
+	err := serviceNameWithUnreservedChars.Validate()
+	assert.NoError(t, err, fmt.Sprintf("UpdateDeviceServiceRequest with service name containing unreserved chars %s should pass validation", nameWithUnreservedChars))
+
+	// Following tests verify if service name containing reserved characters should be detected with an error
+	for _, n := range namesWithReservedChar {
+		serviceNameWithReservedChar := testUpdateDeviceService
+		serviceNameWithReservedChar.Service.Name = &n
+
+		err := serviceNameWithReservedChar.Validate()
+		assert.Error(t, err, fmt.Sprintf("UpdateDeviceServiceRequest with service name containing reserved char %s should return error during validation", n))
+	}
 }
 
 func TestUpdateDeviceServiceRequest_UnmarshalJSON_NilField(t *testing.T) {
@@ -247,9 +282,11 @@ func TestUpdateDeviceServiceRequest_UnmarshalJSON_NilField(t *testing.T) {
 
 func TestUpdateDeviceServiceRequest_UnmarshalJSON_EmptySlice(t *testing.T) {
 	reqJson := `{
+		"apiVersion" : "v2",
         "requestId":"7a1707f0-166f-4c4b-bc9d-1d54c74e0137",
 		"service":{
-			"name":"test device",
+			"apiVersion":"v2",
+			"name":"TestDevice",
 			"labels":[]
 		}
 	}`
@@ -274,4 +311,22 @@ func TestReplaceDeviceServiceModelFieldsWithDTO(t *testing.T) {
 	assert.Equal(t, TestBaseAddress, ds.BaseAddress)
 	assert.Equal(t, models.Locked, string(ds.AdminState))
 	assert.Equal(t, testLabels, ds.Labels)
+}
+
+func TestNewAddDeviceServiceRequest(t *testing.T) {
+	expectedApiVersion := v2.ApiVersion
+
+	actual := NewAddDeviceServiceRequest(dtos.DeviceService{})
+
+	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
+	assert.Equal(t, expectedApiVersion, actual.Service.ApiVersion)
+}
+
+func TestNewUpdateDeviceServiceRequest(t *testing.T) {
+	expectedApiVersion := v2.ApiVersion
+
+	actual := NewUpdateDeviceServiceRequest(dtos.UpdateDeviceService{})
+
+	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
+	assert.Equal(t, expectedApiVersion, actual.Service.ApiVersion)
 }

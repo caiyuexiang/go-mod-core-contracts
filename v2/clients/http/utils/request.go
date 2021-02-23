@@ -8,22 +8,15 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"net/http"
 	"net/url"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 )
 
 // Helper method to make the get request and return the body
 func GetRequest(ctx context.Context, returnValuePointer interface{}, baseUrl string, requestPath string, requestParams url.Values) errors.EdgeX {
-	u, err := url.Parse(baseUrl)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindClientError, "fail to parse baseUrl", err)
-	}
-	u.Path = requestPath
-	if requestParams != nil {
-		u.RawQuery = requestParams.Encode()
-	}
-	req, err := createRequest(ctx, http.MethodGet, u.String())
+	req, err := createRequest(ctx, http.MethodGet, baseUrl, requestPath, requestParams)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -68,6 +61,28 @@ func PutRequest(
 	data interface{}) errors.EdgeX {
 
 	req, err := createRequestWithRawData(ctx, http.MethodPut, url, data)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	res, err := sendRequest(ctx, req)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if err := json.Unmarshal(res, returnValuePointer); err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to parse the response body", err)
+	}
+	return nil
+}
+
+// PatchRequest makes a PATCH request and unmarshals the response to the returnValuePointer
+func PatchRequest(
+	ctx context.Context,
+	returnValuePointer interface{},
+	url string,
+	data interface{}) errors.EdgeX {
+
+	req, err := createRequestWithRawData(ctx, http.MethodPatch, url, data)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -127,8 +142,8 @@ func PutByFileRequest(
 }
 
 // Helper method to make the delete request and return the body
-func DeleteRequest(ctx context.Context, returnValuePointer interface{}, url string) errors.EdgeX {
-	req, err := createRequest(ctx, http.MethodDelete, url)
+func DeleteRequest(ctx context.Context, returnValuePointer interface{}, baseUrl string, requestPath string) errors.EdgeX {
+	req, err := createRequest(ctx, http.MethodDelete, baseUrl, requestPath, nil)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

@@ -21,7 +21,7 @@ const (
 	TestDeviceResourceName = "TestDeviceResourceName"
 	TestTag                = "TestTag"
 
-	TestProfileResourceName = "TestProfileResource"
+	TestDeviceCommandName = "TestDeviceCommand"
 
 	TestReadingValue           = "45"
 	TestReadingFloatValue      = "3.14"
@@ -33,4 +33,35 @@ const (
 	testPort     = 48089
 	testUser     = "edgexer"
 	testPassword = "password"
+
+	TestIntervalName      = "TestInterval"
+	TestIntervalStart     = "20190102T150405"
+	TestIntervalEnd       = "20190802T150405"
+	TestIntervalFrequency = "30ms"
+	TestIntervalRunOnce   = false
 )
+
+var namesWithReservedChar = []string{
+	"name!.~_001",
+	"name#.~_001",
+	"name$.~_001",
+	"name&.~_001",
+	"name`.~_001",
+	"name'.~_001",
+	"name(.~_001",
+	"name).~_001",
+	"name*.~_001",
+	"name,.~_001",
+	"name/.~_001",
+	"name:.~_001",
+	"name;.~_001",
+	"name=.~_001",
+	"name?.~_001",
+	"name@.~_001",
+	"name[.~_001",
+	"name].~_001",
+	"name%.~_001",
+	"name .~_001",
+}
+
+var nameWithUnreservedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"

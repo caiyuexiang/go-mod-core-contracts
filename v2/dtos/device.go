@@ -1,13 +1,13 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package dtos
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 // Device and its properties are defined in the APIv2 specification:
@@ -17,7 +17,7 @@ type Device struct {
 	Id                 string                        `json:"id,omitempty" validate:"omitempty,uuid"`
 	Created            int64                         `json:"created,omitempty"`
 	Modified           int64                         `json:"modified,omitempty"`
-	Name               string                        `json:"name" validate:"required,edgex-dto-none-empty-string"`
+	Name               string                        `json:"name" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
 	Description        string                        `json:"description,omitempty"`
 	AdminState         string                        `json:"adminState" validate:"oneof='LOCKED' 'UNLOCKED'"`
 	OperatingState     string                        `json:"operatingState" validate:"oneof='UP' 'DOWN' 'UNKNOWN'"`
@@ -25,29 +25,30 @@ type Device struct {
 	LastReported       int64                         `json:"lastReported,omitempty"`
 	Labels             []string                      `json:"labels,omitempty"`
 	Location           interface{}                   `json:"location,omitempty"`
-	ServiceName        string                        `json:"serviceName" validate:"required,edgex-dto-none-empty-string"`
-	ProfileName        string                        `json:"profileName" validate:"required,edgex-dto-none-empty-string"`
+	ServiceName        string                        `json:"serviceName" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	ProfileName        string                        `json:"profileName" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
 	AutoEvents         []AutoEvent                   `json:"autoEvents,omitempty" validate:"dive"`
-	Protocols          map[string]ProtocolProperties `json:"protocols,omitempty" validate:"required,gt=0"`
+	Protocols          map[string]ProtocolProperties `json:"protocols" validate:"required,gt=0"`
 }
 
 // UpdateDevice and its properties are defined in the APIv2 specification:
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-metadata/2.x#/UpdateDevice
 type UpdateDevice struct {
-	Id             *string                       `json:"id" validate:"required_without=Name,edgex-dto-uuid"`
-	Name           *string                       `json:"name" validate:"required_without=Id,edgex-dto-none-empty-string"`
-	Description    *string                       `json:"description" validate:"omitempty,edgex-dto-none-empty-string"`
-	AdminState     *string                       `json:"adminState" validate:"omitempty,oneof='LOCKED' 'UNLOCKED'"`
-	OperatingState *string                       `json:"operatingState" validate:"omitempty,oneof='UP' 'DOWN' 'UNKNOWN'"`
-	LastConnected  *int64                        `json:"lastConnected"`
-	LastReported   *int64                        `json:"lastReported"`
-	ServiceName    *string                       `json:"serviceName" validate:"omitempty,edgex-dto-none-empty-string"`
-	ProfileName    *string                       `json:"profileName" validate:"omitempty,edgex-dto-none-empty-string"`
-	Labels         []string                      `json:"labels"`
-	Location       interface{}                   `json:"location"`
-	AutoEvents     []AutoEvent                   `json:"autoEvents" validate:"dive"`
-	Protocols      map[string]ProtocolProperties `json:"protocols" validate:"omitempty,gt=0"`
-	Notify         *bool                         `json:"notify"`
+	common.Versionable `json:",inline"`
+	Id                 *string                       `json:"id" validate:"required_without=Name,edgex-dto-uuid"`
+	Name               *string                       `json:"name" validate:"required_without=Id,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	Description        *string                       `json:"description,omitempty" validate:"omitempty,edgex-dto-none-empty-string"`
+	AdminState         *string                       `json:"adminState,omitempty" validate:"omitempty,oneof='LOCKED' 'UNLOCKED'"`
+	OperatingState     *string                       `json:"operatingState,omitempty" validate:"omitempty,oneof='UP' 'DOWN' 'UNKNOWN'"`
+	LastConnected      *int64                        `json:"lastConnected,omitempty"`
+	LastReported       *int64                        `json:"lastReported,omitempty"`
+	ServiceName        *string                       `json:"serviceName,omitempty" validate:"omitempty,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	ProfileName        *string                       `json:"profileName,omitempty" validate:"omitempty,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	Labels             []string                      `json:"labels,omitempty"`
+	Location           interface{}                   `json:"location,omitempty"`
+	AutoEvents         []AutoEvent                   `json:"autoEvents,omitempty" validate:"dive"`
+	Protocols          map[string]ProtocolProperties `json:"protocols,omitempty" validate:"omitempty,gt=0"`
+	Notify             *bool                         `json:"notify,omitempty"`
 }
 
 // ToDeviceModel transforms the Device DTO to the Device Model
@@ -72,6 +73,7 @@ func ToDeviceModel(dto Device) models.Device {
 // FromDeviceModelToDTO transforms the Device Model to the Device DTO
 func FromDeviceModelToDTO(d models.Device) Device {
 	var dto Device
+	dto.Versionable = common.NewVersionable()
 	dto.Id = d.Id
 	dto.Name = d.Name
 	dto.Description = d.Description
@@ -86,4 +88,27 @@ func FromDeviceModelToDTO(d models.Device) Device {
 	dto.AutoEvents = FromAutoEventModelsToDTOs(d.AutoEvents)
 	dto.Protocols = FromProtocolModelsToDTOs(d.Protocols)
 	return dto
+}
+
+// FromDeviceModelToUpdateDTO transforms the Device Model to the UpdateDevice DTO
+func FromDeviceModelToUpdateDTO(d models.Device) UpdateDevice {
+	adminState := string(d.AdminState)
+	operatingState := string(d.OperatingState)
+	return UpdateDevice{
+		Versionable:    common.NewVersionable(),
+		Id:             &d.Id,
+		Name:           &d.Name,
+		Description:    &d.Description,
+		AdminState:     &adminState,
+		OperatingState: &operatingState,
+		LastConnected:  &d.LastConnected,
+		LastReported:   &d.LastReported,
+		ServiceName:    &d.ServiceName,
+		ProfileName:    &d.ProfileName,
+		Labels:         d.Labels,
+		Location:       d.Location,
+		AutoEvents:     FromAutoEventModelsToDTOs(d.AutoEvents),
+		Protocols:      FromProtocolModelsToDTOs(d.Protocols),
+		Notify:         &d.Notify,
+	}
 }

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,11 +8,11 @@ package requests
 import (
 	"encoding/json"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 // AddEventRequest defines the Request Content for POST event DTO.
@@ -21,6 +21,14 @@ import (
 type AddEventRequest struct {
 	common.BaseRequest `json:",inline"`
 	Event              dtos.Event `json:"event" validate:"required"`
+}
+
+// NewAddEventRequest creates, initializes and returns an AddEventRequests
+func NewAddEventRequest(event dtos.Event) AddEventRequest {
+	return AddEventRequest{
+		BaseRequest: common.NewBaseRequest(),
+		Event:       event,
+	}
 }
 
 // Validate satisfies the Validator interface
@@ -68,27 +76,24 @@ func (a *AddEventRequest) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// AddEventReqToEventModels transforms the AddEventRequest DTO array to the Event model array
-func AddEventReqToEventModels(addRequests []AddEventRequest) (events []models.Event) {
-	for _, a := range addRequests {
-		var e models.Event
-		readings := make([]models.Reading, len(a.Event.Readings))
-		for i, r := range a.Event.Readings {
-			readings[i] = dtos.ToReadingModel(r)
-		}
-
-		tags := make(map[string]string)
-		for tag, value := range a.Event.Tags {
-			tags[tag] = value
-		}
-
-		e.Id = a.Event.Id
-		e.DeviceName = a.Event.DeviceName
-		e.ProfileName = a.Event.ProfileName
-		e.Origin = a.Event.Origin
-		e.Readings = readings
-		e.Tags = tags
-		events = append(events, e)
+// AddEventReqToEventModel transforms the AddEventRequest DTO to the Event model
+func AddEventReqToEventModel(addEventReq AddEventRequest) (event models.Event) {
+	readings := make([]models.Reading, len(addEventReq.Event.Readings))
+	for i, r := range addEventReq.Event.Readings {
+		readings[i] = dtos.ToReadingModel(r)
 	}
-	return events
+
+	tags := make(map[string]string)
+	for tag, value := range addEventReq.Event.Tags {
+		tags[tag] = value
+	}
+
+	return models.Event{
+		Id:          addEventReq.Event.Id,
+		DeviceName:  addEventReq.Event.DeviceName,
+		ProfileName: addEventReq.Event.ProfileName,
+		Origin:      addEventReq.Event.Origin,
+		Readings:    readings,
+		Tags:        tags,
+	}
 }

@@ -1,9 +1,17 @@
+//
+// Copyright (C) 2021 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package dtos
 
 import (
+	"gopkg.in/yaml.v2"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,12 +34,12 @@ var testDeviceProfile = models.DeviceProfile{
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: models.PropertyValue{
-			Type:      "INT16",
+			ValueType: v2.ValueTypeInt16,
 			ReadWrite: "RW",
 		},
 	}},
-	DeviceCommands: []models.ProfileResource{{
-		Name: TestProfileResourceName,
+	DeviceCommands: []models.DeviceCommand{{
+		Name: TestDeviceCommandName,
 		Get: []models.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
@@ -40,14 +48,15 @@ var testDeviceProfile = models.DeviceProfile{
 		}},
 	}},
 	CoreCommands: []models.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  true,
-		Put:  true,
+		Set:  true,
 	}},
 }
 
 func profileData() DeviceProfile {
 	return DeviceProfile{
+		Versionable:  common.NewVersionable(),
 		Name:         TestDeviceProfileName,
 		Manufacturer: TestManufacturer,
 		Description:  TestDescription,
@@ -59,12 +68,12 @@ func profileData() DeviceProfile {
 			Tag:         TestTag,
 			Attributes:  testAttributes,
 			Properties: PropertyValue{
-				Type:      "INT16",
+				ValueType: v2.ValueTypeInt16,
 				ReadWrite: "RW",
 			},
 		}},
-		DeviceCommands: []ProfileResource{{
-			Name: TestProfileResourceName,
+		DeviceCommands: []DeviceCommand{{
+			Name: TestDeviceCommandName,
 			Get: []ResourceOperation{{
 				DeviceResource: TestDeviceResourceName,
 			}},
@@ -73,9 +82,9 @@ func profileData() DeviceProfile {
 			}},
 		}},
 		CoreCommands: []Command{{
-			Name: TestProfileResourceName,
+			Name: TestDeviceCommandName,
 			Get:  true,
-			Put:  true,
+			Set:  true,
 		}},
 	}
 }
@@ -92,10 +101,10 @@ func TestValidateDeviceProfileDTO(t *testing.T) {
 		duplicatedDeviceResource.DeviceResources, DeviceResource{Name: TestDeviceResourceName})
 	duplicatedDeviceCommand := profileData()
 	duplicatedDeviceCommand.DeviceCommands = append(
-		duplicatedDeviceCommand.DeviceCommands, ProfileResource{Name: TestProfileResourceName})
+		duplicatedDeviceCommand.DeviceCommands, DeviceCommand{Name: TestDeviceCommandName})
 	duplicatedCoreCommand := profileData()
 	duplicatedCoreCommand.CoreCommands = append(
-		duplicatedCoreCommand.CoreCommands, Command{Name: TestProfileResourceName})
+		duplicatedCoreCommand.CoreCommands, Command{Name: TestDeviceCommandName})
 	mismatchedCoreCommand := profileData()
 	mismatchedCoreCommand.CoreCommands = append(
 		mismatchedCoreCommand.CoreCommands, Command{Name: "missMatchedCoreCommand"})
@@ -127,6 +136,86 @@ func TestValidateDeviceProfileDTO(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDeviceProfileYaml_ValidateInlineApiVersion(t *testing.T) {
+	valid := `
+apiVersion: "v2"
+name: "Sample-Profile"
+deviceResources:
+  -  
+    name: "DeviceValue_Boolean_RW"
+    properties:
+      { valueType: "Bool"}
+deviceCommands:
+  -  
+    name: "GenerateDeviceValue_Boolean_RW"
+    get:
+      - { deviceResource: "DeviceValue_Boolean_RW" }
+`
+	inValid := `
+name: "Sample-Profile"
+deviceResources:
+  -  
+    name: "DeviceValue_Boolean_RW"
+    properties:
+      { valueType: "Bool"}
+deviceCommands:
+  -  
+    name: "GenerateDeviceValue_Boolean_RW"
+    get:
+      - { deviceResource: "DeviceValue_Boolean_RW" }
+`
+
+	tests := []struct {
+		name    string
+		data    []byte
+		wantErr bool
+	}{
+		{"valid device profile", []byte(valid), false},
+		{"without api version", []byte(inValid), true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var dp DeviceProfile
+			err := yaml.Unmarshal(tt.data, &dp)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestAddDeviceProfile_UnmarshalYAML(t *testing.T) {
+	valid := profileData()
+	resultTestBytes, _ := yaml.Marshal(profileData())
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name     string
+		expected DeviceProfile
+		args     args
+		wantErr  bool
+	}{
+		{"valid", valid, args{resultTestBytes}, false},
+		{"invalid", DeviceProfile{}, args{[]byte("Invalid DeviceProfile")}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var dp DeviceProfile
+			err := yaml.Unmarshal(tt.args.data, &dp)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, dp, "Unmarshal did not result in expected DeviceProfileRequest.")
 			}
 		})
 	}

@@ -14,11 +14,12 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"path/filepath"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 
 	"github.com/google/uuid"
 )
@@ -62,8 +63,16 @@ func makeRequest(req *http.Request) (*http.Response, errors.EdgeX) {
 	return resp, nil
 }
 
-func createRequest(ctx context.Context, httpMethod string, url string) (*http.Request, errors.EdgeX) {
-	req, err := http.NewRequest(httpMethod, url, nil)
+func createRequest(ctx context.Context, httpMethod string, baseUrl string, requestPath string, requestParams url.Values) (*http.Request, errors.EdgeX) {
+	u, err := url.Parse(baseUrl)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindClientError, "fail to parse baseUrl", err)
+	}
+	u.Path = requestPath
+	if requestParams != nil {
+		u.RawQuery = requestParams.Encode()
+	}
+	req, err := http.NewRequest(httpMethod, u.String(), nil)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindClientError, "failed to create a http request", err)
 	}
@@ -146,9 +155,6 @@ func sendRequest(ctx context.Context, req *http.Request) ([]byte, errors.EdgeX) 
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 	msg := fmt.Sprintf("request failed, status code: %d, err: %s", res.StatusCode, res.Message)
-	if resp.StatusCode == http.StatusBadRequest {
-		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, msg, nil)
-	} else {
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, msg, nil)
-	}
+	errKind := errors.KindMapping(res.StatusCode)
+	return nil, errors.NewCommonEdgeX(errKind, msg, nil)
 }

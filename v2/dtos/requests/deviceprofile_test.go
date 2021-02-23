@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,13 +8,12 @@ package requests
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,12 +31,12 @@ func profileData() DeviceProfileRequest {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      v2.ValueTypeInt16,
+			ValueType: v2.ValueTypeInt16,
 			ReadWrite: "RW",
 		},
 	}}
-	var testDeviceCommands = []dtos.ProfileResource{{
-		Name: TestProfileResourceName,
+	var testDeviceCommands = []dtos.DeviceCommand{{
+		Name: TestDeviceCommandName,
 		Get: []dtos.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
@@ -46,15 +45,17 @@ func profileData() DeviceProfileRequest {
 		}},
 	}}
 	var testCoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  true,
-		Put:  true,
+		Set:  true,
 	}}
 	return DeviceProfileRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Profile: dtos.DeviceProfile{
+			Versionable:     common.NewVersionable(),
 			Name:            TestDeviceProfileName,
 			Manufacturer:    TestManufacturer,
 			Description:     TestDescription,
@@ -79,12 +80,12 @@ var expectedDeviceProfile = models.DeviceProfile{
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: models.PropertyValue{
-			Type:      v2.ValueTypeInt16,
+			ValueType: v2.ValueTypeInt16,
 			ReadWrite: "RW",
 		},
 	}},
-	DeviceCommands: []models.ProfileResource{{
-		Name: TestProfileResourceName,
+	DeviceCommands: []models.DeviceCommand{{
+		Name: TestDeviceCommandName,
 		Get: []models.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
@@ -93,9 +94,9 @@ var expectedDeviceProfile = models.DeviceProfile{
 		}},
 	}},
 	CoreCommands: []models.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  true,
-		Put:  true,
+		Set:  true,
 	}},
 }
 
@@ -109,14 +110,14 @@ func TestDeviceProfileRequest_Validate(t *testing.T) {
 	noDeviceResourceName := profileData()
 	noDeviceResourceName.Profile.DeviceResources[0].Name = emptyString
 	noDeviceResourcePropertyType := profileData()
-	noDeviceResourcePropertyType.Profile.DeviceResources[0].Properties.Type = emptyString
+	noDeviceResourcePropertyType.Profile.DeviceResources[0].Properties.ValueType = emptyString
 	invalidDeviceResourcePropertyType := profileData()
-	invalidDeviceResourcePropertyType.Profile.DeviceResources[0].Properties.Type = "BadType"
+	invalidDeviceResourcePropertyType.Profile.DeviceResources[0].Properties.ValueType = "BadType"
 	noCommandName := profileData()
 	noCommandName.Profile.CoreCommands[0].Name = emptyString
 	noEnabledCommand := profileData()
 	noEnabledCommand.Profile.CoreCommands[0].Get = false
-	noEnabledCommand.Profile.CoreCommands[0].Put = false
+	noEnabledCommand.Profile.CoreCommands[0].Set = false
 
 	tests := []struct {
 		name          string
@@ -142,6 +143,21 @@ func TestDeviceProfileRequest_Validate(t *testing.T) {
 			}
 		})
 	}
+
+	profileNameWithUnreservedChars := profileData()
+	profileNameWithUnreservedChars.Profile.Name = nameWithUnreservedChars
+
+	err := profileNameWithUnreservedChars.Validate()
+	assert.NoError(t, err, fmt.Sprintf("DeviceProfileRequest with profile name containing unreserved chars %s should pass validation", nameWithUnreservedChars))
+
+	// Following tests verify if profile name containing reserved characters should be detected with an error
+	for _, n := range namesWithReservedChar {
+		profileNameWithReservedChar := profileData()
+		profileNameWithReservedChar.Profile.Name = n
+
+		err := profileNameWithReservedChar.Validate()
+		assert.Error(t, err, fmt.Sprintf("DeviceProfileRequest with profile name containing reserved char %s should return error during validation", n))
+	}
 }
 
 func TestAddDeviceProfile_UnmarshalJSON(t *testing.T) {
@@ -149,11 +165,11 @@ func TestAddDeviceProfile_UnmarshalJSON(t *testing.T) {
 	validData, err := json.Marshal(profileData())
 	require.NoError(t, err)
 	validValueTypeLowerCase := profileData()
-	validValueTypeLowerCase.Profile.DeviceResources[0].Properties.Type = "int16"
+	validValueTypeLowerCase.Profile.DeviceResources[0].Properties.ValueType = "int16"
 	validValueTypeLowerCaseData, err := json.Marshal(validValueTypeLowerCase)
 	require.NoError(t, err)
 	validValueTypeUpperCase := profileData()
-	validValueTypeUpperCase.Profile.DeviceResources[0].Properties.Type = "INT16"
+	validValueTypeUpperCase.Profile.DeviceResources[0].Properties.ValueType = "INT16"
 	validValueTypeUpperCaseData, err := json.Marshal(validValueTypeUpperCase)
 	require.NoError(t, err)
 
@@ -182,40 +198,18 @@ func TestAddDeviceProfile_UnmarshalJSON(t *testing.T) {
 	}
 }
 
-func TestAddDeviceProfile_UnmarshalYAML(t *testing.T) {
-	valid := profileData()
-	resultTestBytes, _ := yaml.Marshal(profileData())
-	type args struct {
-		data []byte
-	}
-	tests := []struct {
-		name     string
-		expected DeviceProfileRequest
-		args     args
-		wantErr  bool
-	}{
-		{"unmarshal DeviceProfileRequest with success", valid, args{resultTestBytes}, false},
-		{"unmarshal invalid DeviceProfileRequest, empty data", DeviceProfileRequest{}, args{[]byte{}}, true},
-		{"unmarshal invalid DeviceProfileRequest, string data", DeviceProfileRequest{}, args{[]byte("Invalid DeviceProfileRequest")}, true},
-	}
-	fmt.Println(string(resultTestBytes))
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var dp DeviceProfileRequest
-			err := dp.UnmarshalYAML(tt.args.data)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				assert.Equal(t, tt.expected, dp, "Unmarshal did not result in expected DeviceProfileRequest.")
-			}
-		})
-	}
-}
-
 func TestAddDeviceProfileReqToDeviceProfileModels(t *testing.T) {
 	requests := []DeviceProfileRequest{profileData()}
 	expectedDeviceProfileModels := []models.DeviceProfile{expectedDeviceProfile}
 	resultModels := DeviceProfileReqToDeviceProfileModels(requests)
 	assert.Equal(t, expectedDeviceProfileModels, resultModels, "DeviceProfileReqToDeviceProfileModels did not result in expected DeviceProfile model.")
+}
+
+func TestNewDeviceProfileRequest(t *testing.T) {
+	expectedApiVersion := v2.ApiVersion
+
+	actual := NewDeviceProfileRequest(dtos.DeviceProfile{})
+
+	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
+	assert.Equal(t, expectedApiVersion, actual.Profile.ApiVersion)
 }

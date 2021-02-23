@@ -24,6 +24,7 @@ const (
 	KindContractInvalid     ErrKind = "ContractInvalid"
 	KindServerError         ErrKind = "UnexpectedServerError"
 	KindLimitExceeded       ErrKind = "LimitExceeded"
+	KindStatusConflict      ErrKind = "StatusConflict"
 	KindDuplicateName       ErrKind = "DuplicateName"
 	KindInvalidId           ErrKind = "InvalidId"
 	KindServiceUnavailable  ErrKind = "ServiceUnavailable"
@@ -193,7 +194,7 @@ func codeMapping(kind ErrKind) int {
 		return http.StatusNotFound
 	case KindContractInvalid, KindInvalidId:
 		return http.StatusBadRequest
-	case KindDuplicateName:
+	case KindStatusConflict, KindDuplicateName:
 		return http.StatusConflict
 	case KindLimitExceeded:
 		return http.StatusRequestEntityTooLarge
@@ -211,5 +212,37 @@ func codeMapping(kind ErrKind) int {
 		return ClientErrorCode
 	default:
 		return http.StatusInternalServerError
+	}
+}
+
+// KindMapping determines the correct EdgeX error kind for the given HTTP response code.
+func KindMapping(code int) ErrKind {
+	switch code {
+	case http.StatusInternalServerError:
+		return KindServerError
+	case http.StatusBadGateway:
+		return KindCommunicationError
+	case http.StatusNotFound:
+		return KindEntityDoesNotExist
+	case http.StatusBadRequest:
+		return KindContractInvalid
+	case http.StatusConflict:
+		return KindStatusConflict
+	case http.StatusRequestEntityTooLarge:
+		return KindLimitExceeded
+	case http.StatusServiceUnavailable:
+		return KindServiceUnavailable
+	case http.StatusLocked:
+		return KindServiceLocked
+	case http.StatusNotImplemented:
+		return KindNotImplemented
+	case http.StatusMethodNotAllowed:
+		return KindNotAllowed
+	case http.StatusRequestedRangeNotSatisfiable:
+		return KindRangeNotSatisfiable
+	case ClientErrorCode:
+		return KindClientError
+	default:
+		return KindUnknown
 	}
 }

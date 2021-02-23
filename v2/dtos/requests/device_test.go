@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -11,9 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,9 +37,11 @@ var testProtocols = map[string]dtos.ProtocolProperties{
 }
 var testAddDevice = AddDeviceRequest{
 	BaseRequest: common.BaseRequest{
-		RequestId: ExampleUUID,
+		RequestId:   ExampleUUID,
+		Versionable: common.NewVersionable(),
 	},
 	Device: dtos.Device{
+		Versionable:    common.NewVersionable(),
 		Name:           TestDeviceName,
 		ServiceName:    TestDeviceServiceName,
 		ProfileName:    TestDeviceProfileName,
@@ -54,7 +57,8 @@ var testAddDevice = AddDeviceRequest{
 var testNowTime = time.Now().Unix()
 var testUpdateDevice = UpdateDeviceRequest{
 	BaseRequest: common.BaseRequest{
-		RequestId: ExampleUUID,
+		RequestId:   ExampleUUID,
+		Versionable: common.NewVersionable(),
 	},
 	Device: mockUpdateDevice(),
 }
@@ -68,6 +72,7 @@ func mockUpdateDevice() dtos.UpdateDevice {
 	testDeviceServiceName := TestDeviceServiceName
 	testProfileName := TestDeviceProfileName
 	d := dtos.UpdateDevice{}
+	d.Versionable = common.NewVersionable()
 	d.Id = &testId
 	d.Name = &testName
 	d.Description = &testDescription
@@ -129,6 +134,53 @@ func TestAddDeviceRequest_Validate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.Device.Validate()
 			assert.Equal(t, tt.expectError, err != nil, "Unexpected addDeviceRequest validation result.", err)
+		})
+	}
+
+	type testForNameField struct {
+		name        string
+		Device      AddDeviceRequest
+		expectError bool
+	}
+
+	deviceNameWithUnreservedChars := testAddDevice
+	deviceNameWithUnreservedChars.Device.Name = nameWithUnreservedChars
+	profileNameWithUnreservedChars := testAddDevice
+	profileNameWithUnreservedChars.Device.ProfileName = nameWithUnreservedChars
+	serviceNameWithUnreservedChars := testAddDevice
+	serviceNameWithUnreservedChars.Device.ServiceName = nameWithUnreservedChars
+
+	// Following tests verify if name fields containing unreserved characters should pass edgex-dto-rfc3986-unreserved-chars check
+	testsForNameFields := []testForNameField{
+		{"Valid AddDeviceRequest with device name containing unreserved chars", deviceNameWithUnreservedChars, false},
+		{"Valid AddDeviceRequest with profile name containing unreserved chars", profileNameWithUnreservedChars, false},
+		{"Valid AddDeviceRequest with service name containing unreserved chars", serviceNameWithUnreservedChars, false},
+	}
+
+	// Following tests verify if name fields containing reserved characters should be detected with an error
+	for _, n := range namesWithReservedChar {
+		deviceNameWithReservedChar := testAddDevice
+		deviceNameWithReservedChar.Device.Name = n
+		profileNameWithReservedChar := testAddDevice
+		profileNameWithReservedChar.Device.ProfileName = n
+		serviceNameWithReservedChar := testAddDevice
+		serviceNameWithReservedChar.Device.ServiceName = n
+
+		testsForNameFields = append(testsForNameFields,
+			testForNameField{"Invalid AddDeviceRequest with device name containing reserved char", deviceNameWithReservedChar, true},
+			testForNameField{"Invalid AddDeviceRequest with device name containing reserved char", profileNameWithReservedChar, true},
+			testForNameField{"Invalid AddDeviceRequest with device name containing reserved char", serviceNameWithReservedChar, true},
+		)
+	}
+
+	for _, tt := range testsForNameFields {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.Device.Validate()
+			if tt.expectError {
+				assert.Error(t, err, fmt.Sprintf("expect error but not : %s", tt.name))
+			} else {
+				assert.NoError(t, err, fmt.Sprintf("unexpected error occurs : %s", tt.name))
+			}
 		})
 	}
 }
@@ -313,8 +365,9 @@ func TestUpdateDeviceRequest_Validate(t *testing.T) {
 
 func TestUpdateDeviceRequest_UnmarshalJSON_NilField(t *testing.T) {
 	reqJson := `{
+		"apiVersion" : "v2",
         "requestId":"7a1707f0-166f-4c4b-bc9d-1d54c74e0137",
-		"device":{"name":"test device"}
+		"device":{"apiVersion":"v2", "name":"TestDevice"}
 	}`
 	var req UpdateDeviceRequest
 
@@ -338,9 +391,11 @@ func TestUpdateDeviceRequest_UnmarshalJSON_NilField(t *testing.T) {
 
 func TestUpdateDeviceRequest_UnmarshalJSON_EmptySlice(t *testing.T) {
 	reqJson := `{
+		"apiVersion" : "v2",
         "requestId":"7a1707f0-166f-4c4b-bc9d-1d54c74e0137",
 		"device":{
-			"name":"test device",
+			"apiVersion":"v2",
+			"name":"TestDevice",
 			"labels":[],
 			"autoEvents":[]
 		}
@@ -375,4 +430,22 @@ func TestReplaceDeviceModelFieldsWithDTO(t *testing.T) {
 	assert.Equal(t, testDeviceLocation, device.Location)
 	assert.Equal(t, dtos.ToAutoEventModels(testAutoEvents), device.AutoEvents)
 	assert.Equal(t, dtos.ToProtocolModels(testProtocols), device.Protocols)
+}
+
+func TestNewAddDeviceRequest(t *testing.T) {
+	expectedApiVersion := v2.ApiVersion
+
+	actual := NewAddDeviceRequest(dtos.Device{})
+
+	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
+	assert.Equal(t, expectedApiVersion, actual.Device.ApiVersion)
+}
+
+func TestNewUpdateDeviceRequest(t *testing.T) {
+	expectedApiVersion := v2.ApiVersion
+
+	actual := NewUpdateDeviceRequest(dtos.UpdateDevice{})
+
+	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
+	assert.Equal(t, expectedApiVersion, actual.Device.ApiVersion)
 }
