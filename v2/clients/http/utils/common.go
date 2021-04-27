@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -19,7 +19,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 
 	"github.com/google/uuid"
 )
@@ -58,7 +57,10 @@ func makeRequest(req *http.Request) (*http.Response, errors.EdgeX) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return resp, errors.NewCommonEdgeX(errors.KindClientError, "failed to send a http request", err)
+		return nil, errors.NewCommonEdgeX(errors.KindClientError, "failed to send a http request", err)
+	}
+	if resp == nil {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "the response should not be a nil", nil)
 	}
 	return resp, nil
 }
@@ -92,6 +94,21 @@ func createRequestWithRawData(ctx context.Context, httpMethod string, url string
 	}
 
 	req, err := http.NewRequest(httpMethod, url, bytes.NewReader(jsonEncodedData))
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindClientError, "failed to create a http request", err)
+	}
+	req.Header.Set(clients.ContentType, content)
+	req.Header.Set(clients.CorrelationHeader, correlatedId(ctx))
+	return req, nil
+}
+
+func createRequestWithEncodedData(ctx context.Context, httpMethod string, url string, data []byte, encoding string) (*http.Request, errors.EdgeX) {
+	content := encoding
+	if content == "" {
+		content = FromContext(ctx, clients.ContentType)
+	}
+
+	req, err := http.NewRequest(httpMethod, url, bytes.NewReader(data))
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindClientError, "failed to create a http request", err)
 	}
@@ -135,9 +152,6 @@ func sendRequest(ctx context.Context, req *http.Request) ([]byte, errors.EdgeX) 
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
-	if resp == nil {
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, "the response should not be a nil", nil)
-	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := getBody(resp)
@@ -150,11 +164,7 @@ func sendRequest(ctx context.Context, req *http.Request) ([]byte, errors.EdgeX) 
 	}
 
 	// Handle error response
-	var res common.BaseResponse
-	if err := json.Unmarshal(bodyBytes, &res); err != nil {
-		return nil, errors.NewCommonEdgeXWrapper(err)
-	}
-	msg := fmt.Sprintf("request failed, status code: %d, err: %s", res.StatusCode, res.Message)
-	errKind := errors.KindMapping(res.StatusCode)
+	msg := fmt.Sprintf("request failed, status code: %d, err: %s", resp.StatusCode, string(bodyBytes))
+	errKind := errors.KindMapping(resp.StatusCode)
 	return nil, errors.NewCommonEdgeX(errKind, msg, nil)
 }

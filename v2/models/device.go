@@ -9,7 +9,7 @@ package models
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-metadata/2.x#/Device
 // Model fields are same as the DTOs documented by this swagger. Exceptions, if any, are noted below.
 type Device struct {
-	Timestamps
+	DBTimestamp
 	Id             string
 	Name           string
 	Description    string
@@ -28,3 +28,9 @@ type Device struct {
 
 // ProtocolProperties contains the device connection information in key/value pair
 type ProtocolProperties map[string]string
+
+// AdminState controls the range of values which constitute valid administrative states for a device
+type AdminState string
+
+// OperatingState is an indication of the operations of the device.
+type OperatingState string

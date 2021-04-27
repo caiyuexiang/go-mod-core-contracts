@@ -25,7 +25,6 @@ var testAddDeviceService = AddDeviceServiceRequest{
 		Versionable: common.NewVersionable(),
 	},
 	Service: dtos.DeviceService{
-		Versionable: common.NewVersionable(),
 		Name:        TestDeviceServiceName,
 		BaseAddress: TestBaseAddress,
 		Labels:      []string{"MODBUS", "TEMP"},
@@ -47,7 +46,6 @@ func mockDeviceServiceDTO() dtos.UpdateDeviceService {
 	testBaseAddress := TestBaseAddress
 	testAdminState := models.Locked
 	ds := dtos.UpdateDeviceService{}
-	ds.Versionable = common.NewVersionable()
 	ds.Id = &testUUID
 	ds.Name = &testName
 	ds.BaseAddress = &testBaseAddress
@@ -319,7 +317,6 @@ func TestNewAddDeviceServiceRequest(t *testing.T) {
 	actual := NewAddDeviceServiceRequest(dtos.DeviceService{})
 
 	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
-	assert.Equal(t, expectedApiVersion, actual.Service.ApiVersion)
 }
 
 func TestNewUpdateDeviceServiceRequest(t *testing.T) {
@@ -328,5 +325,4 @@ func TestNewUpdateDeviceServiceRequest(t *testing.T) {
 	actual := NewUpdateDeviceServiceRequest(dtos.UpdateDeviceService{})
 
 	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
-	assert.Equal(t, expectedApiVersion, actual.Service.ApiVersion)
 }

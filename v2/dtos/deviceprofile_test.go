@@ -6,11 +6,11 @@
 package dtos
 
 import (
-	"gopkg.in/yaml.v2"
 	"testing"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +18,7 @@ import (
 )
 
 var testLabels = []string{"MODBUS", "TEMP"}
-var testAttributes = map[string]string{
+var testAttributes = map[string]interface{}{
 	"TestAttribute": "TestAttributeValue",
 }
 
@@ -33,30 +33,22 @@ var testDeviceProfile = models.DeviceProfile{
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: models.PropertyValue{
+		Properties: models.ResourceProperties{
 			ValueType: v2.ValueTypeInt16,
-			ReadWrite: "RW",
+			ReadWrite: v2.ReadWrite_RW,
 		},
 	}},
 	DeviceCommands: []models.DeviceCommand{{
-		Name: TestDeviceCommandName,
-		Get: []models.ResourceOperation{{
+		Name:      TestDeviceCommandName,
+		ReadWrite: v2.ReadWrite_RW,
+		ResourceOperations: []models.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
-		Set: []models.ResourceOperation{{
-			DeviceResource: TestDeviceResourceName,
-		}},
-	}},
-	CoreCommands: []models.Command{{
-		Name: TestDeviceCommandName,
-		Get:  true,
-		Set:  true,
 	}},
 }
 
 func profileData() DeviceProfile {
 	return DeviceProfile{
-		Versionable:  common.NewVersionable(),
 		Name:         TestDeviceProfileName,
 		Manufacturer: TestManufacturer,
 		Description:  TestDescription,
@@ -67,24 +59,17 @@ func profileData() DeviceProfile {
 			Description: TestDescription,
 			Tag:         TestTag,
 			Attributes:  testAttributes,
-			Properties: PropertyValue{
+			Properties: ResourceProperties{
 				ValueType: v2.ValueTypeInt16,
-				ReadWrite: "RW",
+				ReadWrite: v2.ReadWrite_RW,
 			},
 		}},
 		DeviceCommands: []DeviceCommand{{
-			Name: TestDeviceCommandName,
-			Get: []ResourceOperation{{
+			Name:      TestDeviceCommandName,
+			ReadWrite: v2.ReadWrite_RW,
+			ResourceOperations: []ResourceOperation{{
 				DeviceResource: TestDeviceResourceName,
 			}},
-			Set: []ResourceOperation{{
-				DeviceResource: TestDeviceResourceName,
-			}},
-		}},
-		CoreCommands: []Command{{
-			Name: TestDeviceCommandName,
-			Get:  true,
-			Set:  true,
 		}},
 	}
 }
@@ -94,7 +79,7 @@ func TestFromDeviceProfileModelToDTO(t *testing.T) {
 	assert.Equal(t, profileData(), result, "FromDeviceProfileModelToDTO did not result in expected device profile DTO.")
 }
 
-func TestValidateDeviceProfileDTO(t *testing.T) {
+func TestDeviceProfileDTOValidation(t *testing.T) {
 	valid := profileData()
 	duplicatedDeviceResource := profileData()
 	duplicatedDeviceResource.DeviceResources = append(
@@ -102,18 +87,11 @@ func TestValidateDeviceProfileDTO(t *testing.T) {
 	duplicatedDeviceCommand := profileData()
 	duplicatedDeviceCommand.DeviceCommands = append(
 		duplicatedDeviceCommand.DeviceCommands, DeviceCommand{Name: TestDeviceCommandName})
-	duplicatedCoreCommand := profileData()
-	duplicatedCoreCommand.CoreCommands = append(
-		duplicatedCoreCommand.CoreCommands, Command{Name: TestDeviceCommandName})
-	mismatchedCoreCommand := profileData()
-	mismatchedCoreCommand.CoreCommands = append(
-		mismatchedCoreCommand.CoreCommands, Command{Name: "missMatchedCoreCommand"})
-	mismatchedGetResource := profileData()
-	mismatchedGetResource.DeviceCommands[0].Get = append(
-		mismatchedGetResource.DeviceCommands[0].Get, ResourceOperation{DeviceResource: "missMatchedResource"})
-	mismatchedSetResource := profileData()
-	mismatchedSetResource.DeviceCommands[0].Set = append(
-		mismatchedSetResource.DeviceCommands[0].Set, ResourceOperation{DeviceResource: "missMatchedResource"})
+	mismatchedResource := profileData()
+	mismatchedResource.DeviceCommands[0].ResourceOperations = append(
+		mismatchedResource.DeviceCommands[0].ResourceOperations, ResourceOperation{DeviceResource: "missMatchedResource"})
+	invalidReadWrite := profileData()
+	invalidReadWrite.DeviceResources[0].Properties.ReadWrite = v2.ReadWrite_R
 
 	tests := []struct {
 		name        string
@@ -123,67 +101,14 @@ func TestValidateDeviceProfileDTO(t *testing.T) {
 		{"valid device profile", valid, false},
 		{"duplicated device resource", duplicatedDeviceResource, true},
 		{"duplicated device command", duplicatedDeviceCommand, true},
-		{"duplicated core command", duplicatedCoreCommand, true},
-		{"mismatched core command", mismatchedCoreCommand, true},
-		{"mismatched Get resource", mismatchedGetResource, true},
-		{"mismatched Set resource", mismatchedSetResource, true},
+		{"mismatched resource", mismatchedResource, true},
+		{"invalid ReadWrite permission", invalidReadWrite, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateDeviceProfileDTO(tt.profile)
+			err := tt.profile.Validate()
 			if tt.expectError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestDeviceProfileYaml_ValidateInlineApiVersion(t *testing.T) {
-	valid := `
-apiVersion: "v2"
-name: "Sample-Profile"
-deviceResources:
-  -  
-    name: "DeviceValue_Boolean_RW"
-    properties:
-      { valueType: "Bool"}
-deviceCommands:
-  -  
-    name: "GenerateDeviceValue_Boolean_RW"
-    get:
-      - { deviceResource: "DeviceValue_Boolean_RW" }
-`
-	inValid := `
-name: "Sample-Profile"
-deviceResources:
-  -  
-    name: "DeviceValue_Boolean_RW"
-    properties:
-      { valueType: "Bool"}
-deviceCommands:
-  -  
-    name: "GenerateDeviceValue_Boolean_RW"
-    get:
-      - { deviceResource: "DeviceValue_Boolean_RW" }
-`
-
-	tests := []struct {
-		name    string
-		data    []byte
-		wantErr bool
-	}{
-		{"valid device profile", []byte(valid), false},
-		{"without api version", []byte(inValid), true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var dp DeviceProfile
-			err := yaml.Unmarshal(tt.data, &dp)
-			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)

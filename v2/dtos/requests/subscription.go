@@ -15,6 +15,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
+var supportedChannelTypes = []string{v2.EMAIL, v2.REST}
+
 // AddSubscriptionRequest defines the Request Content for POST Subscription DTO.
 // This object and its properties correspond to the AddSubscriptionRequest object in the APIv2 specification:
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/support-notifications/2.x#/AddSubscriptionRequest
@@ -26,7 +28,18 @@ type AddSubscriptionRequest struct {
 // Validate satisfies the Validator interface
 func (request AddSubscriptionRequest) Validate() error {
 	err := v2.Validate(request)
-	return err
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	for _, c := range request.Subscription.Channels {
+		err = c.Validate()
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		} else if !contains(supportedChannelTypes, c.Type) {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "MQTT is not valid type for Channel", nil)
+		}
+	}
+	return nil
 }
 
 // UnmarshalJSON implements the Unmarshaler interface for the AddSubscriptionRequest type
@@ -43,7 +56,7 @@ func (request *AddSubscriptionRequest) UnmarshalJSON(b []byte) error {
 
 	// validate AddSubscriptionRequest DTO
 	if err := request.Validate(); err != nil {
-		return err
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 	return nil
 }
@@ -68,7 +81,22 @@ type UpdateSubscriptionRequest struct {
 // Validate satisfies the Validator interface
 func (request UpdateSubscriptionRequest) Validate() error {
 	err := v2.Validate(request)
-	return err
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	for _, c := range request.Subscription.Channels {
+		err = c.Validate()
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		} else if !contains(supportedChannelTypes, c.Type) {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "MQTT is not valid type for Channel", nil)
+		}
+	}
+	if request.Subscription.Categories != nil && request.Subscription.Labels != nil &&
+		len(request.Subscription.Categories) == 0 && len(request.Subscription.Labels) == 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "categories and labels can not be both empty", nil)
+	}
+	return nil
 }
 
 // UnmarshalJSON implements the Unmarshaler interface for the UpdateSubscriptionRequest type
@@ -85,7 +113,7 @@ func (request *UpdateSubscriptionRequest) UnmarshalJSON(b []byte) error {
 
 	// validate UpdateSubscriptionRequest DTO
 	if err := request.Validate(); err != nil {
-		return err
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 	return nil
 }
@@ -93,10 +121,10 @@ func (request *UpdateSubscriptionRequest) UnmarshalJSON(b []byte) error {
 // ReplaceSubscriptionModelFieldsWithDTO replace existing Subscription's fields with DTO patch
 func ReplaceSubscriptionModelFieldsWithDTO(s *models.Subscription, patch dtos.UpdateSubscription) {
 	if patch.Channels != nil {
-		s.Channels = dtos.ToChannelModels(patch.Channels)
+		s.Channels = dtos.ToAddressModels(patch.Channels)
 	}
 	if patch.Categories != nil {
-		s.Categories = dtos.ToCategoryModels(patch.Categories)
+		s.Categories = patch.Categories
 	}
 	if patch.Labels != nil {
 		s.Labels = patch.Labels
@@ -116,7 +144,6 @@ func ReplaceSubscriptionModelFieldsWithDTO(s *models.Subscription, patch dtos.Up
 }
 
 func NewAddSubscriptionRequest(dto dtos.Subscription) AddSubscriptionRequest {
-	dto.Versionable = common.NewVersionable()
 	return AddSubscriptionRequest{
 		BaseRequest:  common.NewBaseRequest(),
 		Subscription: dto,
@@ -124,9 +151,17 @@ func NewAddSubscriptionRequest(dto dtos.Subscription) AddSubscriptionRequest {
 }
 
 func NewUpdateSubscriptionRequest(dto dtos.UpdateSubscription) UpdateSubscriptionRequest {
-	dto.Versionable = common.NewVersionable()
 	return UpdateSubscriptionRequest{
 		BaseRequest:  common.NewBaseRequest(),
 		Subscription: dto,
 	}
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }

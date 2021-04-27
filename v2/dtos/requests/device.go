@@ -131,7 +131,6 @@ func ReplaceDeviceModelFieldsWithDTO(device *models.Device, patch dtos.UpdateDev
 }
 
 func NewAddDeviceRequest(dto dtos.Device) AddDeviceRequest {
-	dto.Versionable = common.NewVersionable()
 	return AddDeviceRequest{
 		BaseRequest: common.NewBaseRequest(),
 		Device:      dto,
@@ -139,7 +138,6 @@ func NewAddDeviceRequest(dto dtos.Device) AddDeviceRequest {
 }
 
 func NewUpdateDeviceRequest(dto dtos.UpdateDevice) UpdateDeviceRequest {
-	dto.Versionable = common.NewVersionable()
 	return UpdateDeviceRequest{
 		BaseRequest: common.NewBaseRequest(),
 		Device:      dto,

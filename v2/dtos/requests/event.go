@@ -7,7 +7,11 @@ package requests
 
 import (
 	"encoding/json"
+	"os"
 
+	"github.com/fxamacker/cbor/v2"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
@@ -49,13 +53,24 @@ func (a AddEventRequest) Validate() error {
 	return nil
 }
 
+type unmarshal func([]byte, interface{}) error
+
 func (a *AddEventRequest) UnmarshalJSON(b []byte) error {
+	return a.Unmarshal(b, json.Unmarshal)
+}
+
+func (a *AddEventRequest) UnmarshalCBOR(b []byte) error {
+	return a.Unmarshal(b, cbor.Unmarshal)
+}
+
+func (a *AddEventRequest) Unmarshal(b []byte, f unmarshal) error {
+	// To avoid recursively invoke unmarshaler interface, intentionally create a struct to represent AddEventRequest DTO
 	var addEvent struct {
 		common.BaseRequest
 		Event dtos.Event
 	}
-	if err := json.Unmarshal(b, &addEvent); err != nil {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "Failed to unmarshal request body as JSON.", err)
+	if err := f(b, &addEvent); err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "Failed to unmarshal the byte array.", err)
 	}
 
 	*a = AddEventRequest(addEvent)
@@ -76,6 +91,37 @@ func (a *AddEventRequest) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (a *AddEventRequest) Encode() ([]byte, string, error) {
+	var encoding = clients.ContentTypeJSON
+
+	for _, r := range a.Event.Readings {
+		if r.ValueType == v2.ValueTypeBinary {
+			encoding = clients.ContentTypeCBOR
+			break
+		}
+	}
+	if v := os.Getenv(v2.EnvEncodeAllEvents); v == v2.ValueTrue {
+		encoding = clients.ContentTypeCBOR
+	}
+
+	var err error
+	var encodedData []byte
+	switch encoding {
+	case clients.ContentTypeCBOR:
+		encodedData, err = cbor.Marshal(a)
+		if err != nil {
+			return nil, "", errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to encode AddEventRequest to CBOR", err)
+		}
+	case clients.ContentTypeJSON:
+		encodedData, err = json.Marshal(a)
+		if err != nil {
+			return nil, "", errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to encode AddEventRequest to JSON", err)
+		}
+	}
+
+	return encodedData, encoding, nil
+}
+
 // AddEventReqToEventModel transforms the AddEventRequest DTO to the Event model
 func AddEventReqToEventModel(addEventReq AddEventRequest) (event models.Event) {
 	readings := make([]models.Reading, len(addEventReq.Event.Readings))
@@ -92,6 +138,7 @@ func AddEventReqToEventModel(addEventReq AddEventRequest) (event models.Event) {
 		Id:          addEventReq.Event.Id,
 		DeviceName:  addEventReq.Event.DeviceName,
 		ProfileName: addEventReq.Event.ProfileName,
+		SourceName:  addEventReq.Event.SourceName,
 		Origin:      addEventReq.Event.Origin,
 		Readings:    readings,
 		Tags:        tags,

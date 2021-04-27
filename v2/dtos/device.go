@@ -6,49 +6,45 @@
 package dtos
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 // Device and its properties are defined in the APIv2 specification:
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-metadata/2.x#/Device
 type Device struct {
-	common.Versionable `json:",inline"`
-	Id                 string                        `json:"id,omitempty" validate:"omitempty,uuid"`
-	Created            int64                         `json:"created,omitempty"`
-	Modified           int64                         `json:"modified,omitempty"`
-	Name               string                        `json:"name" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
-	Description        string                        `json:"description,omitempty"`
-	AdminState         string                        `json:"adminState" validate:"oneof='LOCKED' 'UNLOCKED'"`
-	OperatingState     string                        `json:"operatingState" validate:"oneof='UP' 'DOWN' 'UNKNOWN'"`
-	LastConnected      int64                         `json:"lastConnected,omitempty"`
-	LastReported       int64                         `json:"lastReported,omitempty"`
-	Labels             []string                      `json:"labels,omitempty"`
-	Location           interface{}                   `json:"location,omitempty"`
-	ServiceName        string                        `json:"serviceName" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
-	ProfileName        string                        `json:"profileName" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
-	AutoEvents         []AutoEvent                   `json:"autoEvents,omitempty" validate:"dive"`
-	Protocols          map[string]ProtocolProperties `json:"protocols" validate:"required,gt=0"`
+	DBTimestamp    `json:",inline"`
+	Id             string                        `json:"id,omitempty" validate:"omitempty,uuid"`
+	Name           string                        `json:"name" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	Description    string                        `json:"description,omitempty"`
+	AdminState     string                        `json:"adminState" validate:"oneof='LOCKED' 'UNLOCKED'"`
+	OperatingState string                        `json:"operatingState" validate:"oneof='UP' 'DOWN' 'UNKNOWN'"`
+	LastConnected  int64                         `json:"lastConnected,omitempty"`
+	LastReported   int64                         `json:"lastReported,omitempty"`
+	Labels         []string                      `json:"labels,omitempty"`
+	Location       interface{}                   `json:"location,omitempty"`
+	ServiceName    string                        `json:"serviceName" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	ProfileName    string                        `json:"profileName" validate:"required,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	AutoEvents     []AutoEvent                   `json:"autoEvents,omitempty" validate:"dive"`
+	Protocols      map[string]ProtocolProperties `json:"protocols" validate:"required,gt=0"`
 }
 
 // UpdateDevice and its properties are defined in the APIv2 specification:
 // https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-metadata/2.x#/UpdateDevice
 type UpdateDevice struct {
-	common.Versionable `json:",inline"`
-	Id                 *string                       `json:"id" validate:"required_without=Name,edgex-dto-uuid"`
-	Name               *string                       `json:"name" validate:"required_without=Id,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
-	Description        *string                       `json:"description,omitempty" validate:"omitempty,edgex-dto-none-empty-string"`
-	AdminState         *string                       `json:"adminState,omitempty" validate:"omitempty,oneof='LOCKED' 'UNLOCKED'"`
-	OperatingState     *string                       `json:"operatingState,omitempty" validate:"omitempty,oneof='UP' 'DOWN' 'UNKNOWN'"`
-	LastConnected      *int64                        `json:"lastConnected,omitempty"`
-	LastReported       *int64                        `json:"lastReported,omitempty"`
-	ServiceName        *string                       `json:"serviceName,omitempty" validate:"omitempty,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
-	ProfileName        *string                       `json:"profileName,omitempty" validate:"omitempty,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
-	Labels             []string                      `json:"labels,omitempty"`
-	Location           interface{}                   `json:"location,omitempty"`
-	AutoEvents         []AutoEvent                   `json:"autoEvents,omitempty" validate:"dive"`
-	Protocols          map[string]ProtocolProperties `json:"protocols,omitempty" validate:"omitempty,gt=0"`
-	Notify             *bool                         `json:"notify,omitempty"`
+	Id             *string                       `json:"id,omitempty" validate:"required_without=Name,edgex-dto-uuid"`
+	Name           *string                       `json:"name,omitempty" validate:"required_without=Id,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	Description    *string                       `json:"description,omitempty" validate:"omitempty,edgex-dto-none-empty-string"`
+	AdminState     *string                       `json:"adminState,omitempty" validate:"omitempty,oneof='LOCKED' 'UNLOCKED'"`
+	OperatingState *string                       `json:"operatingState,omitempty" validate:"omitempty,oneof='UP' 'DOWN' 'UNKNOWN'"`
+	LastConnected  *int64                        `json:"lastConnected,omitempty"`
+	LastReported   *int64                        `json:"lastReported,omitempty"`
+	ServiceName    *string                       `json:"serviceName,omitempty" validate:"omitempty,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	ProfileName    *string                       `json:"profileName,omitempty" validate:"omitempty,edgex-dto-none-empty-string,edgex-dto-rfc3986-unreserved-chars"`
+	Labels         []string                      `json:"labels,omitempty"`
+	Location       interface{}                   `json:"location,omitempty"`
+	AutoEvents     []AutoEvent                   `json:"autoEvents,omitempty" validate:"dive"`
+	Protocols      map[string]ProtocolProperties `json:"protocols,omitempty" validate:"omitempty,gt=0"`
+	Notify         *bool                         `json:"notify,omitempty"`
 }
 
 // ToDeviceModel transforms the Device DTO to the Device Model
@@ -73,7 +69,6 @@ func ToDeviceModel(dto Device) models.Device {
 // FromDeviceModelToDTO transforms the Device Model to the Device DTO
 func FromDeviceModelToDTO(d models.Device) Device {
 	var dto Device
-	dto.Versionable = common.NewVersionable()
 	dto.Id = d.Id
 	dto.Name = d.Name
 	dto.Description = d.Description
@@ -92,23 +87,47 @@ func FromDeviceModelToDTO(d models.Device) Device {
 
 // FromDeviceModelToUpdateDTO transforms the Device Model to the UpdateDevice DTO
 func FromDeviceModelToUpdateDTO(d models.Device) UpdateDevice {
-	adminState := string(d.AdminState)
-	operatingState := string(d.OperatingState)
-	return UpdateDevice{
-		Versionable:    common.NewVersionable(),
-		Id:             &d.Id,
-		Name:           &d.Name,
-		Description:    &d.Description,
-		AdminState:     &adminState,
-		OperatingState: &operatingState,
-		LastConnected:  &d.LastConnected,
-		LastReported:   &d.LastReported,
-		ServiceName:    &d.ServiceName,
-		ProfileName:    &d.ProfileName,
-		Labels:         d.Labels,
-		Location:       d.Location,
-		AutoEvents:     FromAutoEventModelsToDTOs(d.AutoEvents),
-		Protocols:      FromProtocolModelsToDTOs(d.Protocols),
-		Notify:         &d.Notify,
+	dto := UpdateDevice{
+		Labels: d.Labels,
+		Notify: &d.Notify,
 	}
+	if d.Id != "" {
+		dto.Id = &d.Id
+	}
+	if d.Name != "" {
+		dto.Name = &d.Name
+	}
+	if d.Description != "" {
+		dto.Description = &d.Description
+	}
+	if d.AdminState != "" {
+		adminState := string(d.AdminState)
+		dto.AdminState = &adminState
+	}
+	if d.OperatingState != "" {
+		operatingState := string(d.OperatingState)
+		dto.OperatingState = &operatingState
+	}
+	if d.LastConnected != 0 {
+		dto.LastConnected = &d.LastConnected
+	}
+	if d.LastReported != 0 {
+		dto.LastReported = &d.LastReported
+	}
+	if d.ServiceName != "" {
+		dto.ServiceName = &d.ServiceName
+	}
+	if d.ProfileName != "" {
+		dto.ProfileName = &d.ProfileName
+	}
+	if d.Location != nil {
+		dto.Location = d.Location
+	}
+	if d.AutoEvents != nil {
+		dto.AutoEvents = FromAutoEventModelsToDTOs(d.AutoEvents)
+	}
+	if d.Protocols != nil {
+		dto.Protocols = FromProtocolModelsToDTOs(d.Protocols)
+	}
+	return dto
 }

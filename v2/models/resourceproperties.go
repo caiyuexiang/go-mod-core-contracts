@@ -5,17 +5,10 @@
 
 package models
 
-const (
-	// Base64Encoding : the float value is represented in Base64 encoding
-	Base64Encoding = "Base64"
-	// ENotation : the float value is represented in eNotation
-	ENotation = "eNotation"
-)
-
-// PropertyValue and its properties care defined in the APIv2 specification:
-// https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-metadata/2.x#/PropertyValue
+// ResourceProperties and its properties care defined in the APIv2 specification:
+// https://app.swaggerhub.com/apis-docs/EdgeXFoundry1/core-metadata/2.x#/ResourceProperties
 // Model fields are same as the DTOs documented by this swagger. Exceptions, if any, are noted below.
-type PropertyValue struct {
+type ResourceProperties struct {
 	ValueType    string
 	ReadWrite    string
 	Units        string

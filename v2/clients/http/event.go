@@ -33,9 +33,15 @@ func NewEventClient(baseUrl string) interfaces.EventClient {
 
 func (ec *eventClient) Add(ctx context.Context, req requests.AddEventRequest) (
 	common.BaseWithIdResponse, errors.EdgeX) {
-	path := path.Join(v2.ApiEventRoute, url.QueryEscape(req.Event.ProfileName), url.QueryEscape(req.Event.DeviceName))
+	path := path.Join(v2.ApiEventRoute, url.QueryEscape(req.Event.ProfileName), url.QueryEscape(req.Event.DeviceName), url.QueryEscape(req.Event.SourceName))
 	var br common.BaseWithIdResponse
-	err := utils.PostRequest(ctx, &br, ec.baseUrl+path, req)
+
+	bytes, encoding, err := req.Encode()
+	if err != nil {
+		return br, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	err = utils.PostRequest(ctx, &br, ec.baseUrl+path, bytes, encoding)
 	if err != nil {
 		return br, errors.NewCommonEdgeXWrapper(err)
 	}

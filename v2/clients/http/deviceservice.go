@@ -29,7 +29,7 @@ func NewDeviceServiceClient(baseUrl string) interfaces.DeviceServiceClient {
 
 func (dsc DeviceServiceClient) Add(ctx context.Context, reqs []requests.AddDeviceServiceRequest) (
 	res []common.BaseWithIdResponse, err errors.EdgeX) {
-	err = utils.PostRequest(ctx, &res, dsc.baseUrl+v2.ApiDeviceServiceRoute, reqs)
+	err = utils.PostRequestWithRawData(ctx, &res, dsc.baseUrl+v2.ApiDeviceServiceRoute, reqs)
 	if err != nil {
 		return res, errors.NewCommonEdgeXWrapper(err)
 	}

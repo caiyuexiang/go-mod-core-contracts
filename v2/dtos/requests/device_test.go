@@ -23,10 +23,10 @@ import (
 var testDeviceLabels = []string{"MODBUS", "TEMP"}
 var testDeviceLocation = "{40lat;45long}"
 var testAutoEvents = []dtos.AutoEvent{
-	{Resource: "TestDevice", Frequency: "300ms", OnChange: true},
+	{SourceName: "TestDevice", Frequency: "300ms", OnChange: true},
 }
 var testAutoEventsWithInvalidFrequency = []dtos.AutoEvent{
-	{Resource: "TestDevice", Frequency: "300", OnChange: true},
+	{SourceName: "TestDevice", Frequency: "300", OnChange: true},
 }
 var testProtocols = map[string]dtos.ProtocolProperties{
 	"modbus-ip": {
@@ -41,7 +41,6 @@ var testAddDevice = AddDeviceRequest{
 		Versionable: common.NewVersionable(),
 	},
 	Device: dtos.Device{
-		Versionable:    common.NewVersionable(),
 		Name:           TestDeviceName,
 		ServiceName:    TestDeviceServiceName,
 		ProfileName:    TestDeviceProfileName,
@@ -72,7 +71,6 @@ func mockUpdateDevice() dtos.UpdateDevice {
 	testDeviceServiceName := TestDeviceServiceName
 	testProfileName := TestDeviceProfileName
 	d := dtos.UpdateDevice{}
-	d.Versionable = common.NewVersionable()
 	d.Id = &testId
 	d.Name = &testName
 	d.Description = &testDescription
@@ -108,7 +106,7 @@ func TestAddDeviceRequest_Validate(t *testing.T) {
 	noProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{}
 	noAutoEventFrequency := testAddDevice
 	noAutoEventFrequency.Device.AutoEvents = []dtos.AutoEvent{
-		{Resource: "TestDevice", OnChange: true},
+		{SourceName: "TestDevice", OnChange: true},
 	}
 	noAutoEventResource := testAddDevice
 	noAutoEventResource.Device.AutoEvents = []dtos.AutoEvent{
@@ -228,7 +226,7 @@ func Test_AddDeviceReqToDeviceModels(t *testing.T) {
 			Labels:         testDeviceLabels,
 			Location:       testDeviceLocation,
 			AutoEvents: []models.AutoEvent{
-				{Resource: "TestDevice", Frequency: "300ms", OnChange: true},
+				{SourceName: "TestDevice", Frequency: "300ms", OnChange: true},
 			},
 			Protocols: map[string]models.ProtocolProperties{
 				"modbus-ip": {
@@ -438,7 +436,6 @@ func TestNewAddDeviceRequest(t *testing.T) {
 	actual := NewAddDeviceRequest(dtos.Device{})
 
 	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
-	assert.Equal(t, expectedApiVersion, actual.Device.ApiVersion)
 }
 
 func TestNewUpdateDeviceRequest(t *testing.T) {
@@ -447,5 +444,4 @@ func TestNewUpdateDeviceRequest(t *testing.T) {
 	actual := NewUpdateDeviceRequest(dtos.UpdateDevice{})
 
 	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
-	assert.Equal(t, expectedApiVersion, actual.Device.ApiVersion)
 }

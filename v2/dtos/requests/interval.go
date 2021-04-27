@@ -107,7 +107,6 @@ func ReplaceIntervalModelFieldsWithDTO(interval *models.Interval, patch dtos.Upd
 }
 
 func NewAddIntervalRequest(dto dtos.Interval) AddIntervalRequest {
-	dto.Versionable = common.NewVersionable()
 	return AddIntervalRequest{
 		BaseRequest: common.NewBaseRequest(),
 		Interval:    dto,
@@ -115,7 +114,6 @@ func NewAddIntervalRequest(dto dtos.Interval) AddIntervalRequest {
 }
 
 func NewUpdateIntervalRequest(dto dtos.UpdateInterval) UpdateIntervalRequest {
-	dto.Versionable = common.NewVersionable()
 	return UpdateIntervalRequest{
 		BaseRequest: common.NewBaseRequest(),
 		Interval:    dto,

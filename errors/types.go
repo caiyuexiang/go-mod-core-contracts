@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -34,6 +34,8 @@ const (
 	KindRangeNotSatisfiable ErrKind = "RangeNotSatisfiable"
 	KindClientError         ErrKind = "ClientError"
 	KindIOError             ErrKind = "IOError"
+	KindOverflowError       ErrKind = "OverflowError"
+	KindNaNError            ErrKind = "NaNError"
 )
 
 // Error codes are not defined in HTTP status codes
@@ -94,7 +96,11 @@ func (ce CommonEdgeX) Error() string {
 
 	// ce.err.Error functionality gets the error message of the nested error and which will handle both CommonEdgeX
 	// types and Go standard errors(both wrapped and non-wrapped).
-	return ce.message + " -> " + ce.err.Error()
+	if ce.message != "" {
+		return ce.message + " -> " + ce.err.Error()
+	} else {
+		return ce.err.Error()
+	}
 }
 
 // DebugMessages returns a string taking all nested and wrapped operations and errors into account.
@@ -186,7 +192,7 @@ func getCallerInformation() string {
 // codeMapping determines the correct HTTP response code for the given error kind.
 func codeMapping(kind ErrKind) int {
 	switch kind {
-	case KindUnknown, KindDatabaseError, KindServerError:
+	case KindUnknown, KindDatabaseError, KindServerError, KindOverflowError, KindNaNError:
 		return http.StatusInternalServerError
 	case KindCommunicationError:
 		return http.StatusBadGateway

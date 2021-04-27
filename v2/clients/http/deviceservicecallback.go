@@ -30,7 +30,7 @@ func NewDeviceServiceCallbackClient(baseUrl string) interfaces.DeviceServiceCall
 
 func (client *deviceServiceCallbackClient) AddDeviceCallback(ctx context.Context, request requests.AddDeviceRequest) (common.BaseResponse, errors.EdgeX) {
 	var response common.BaseResponse
-	err := utils.PostRequest(ctx, &response, client.baseUrl+v2.ApiDeviceCallbackRoute, request)
+	err := utils.PostRequestWithRawData(ctx, &response, client.baseUrl+v2.ApiDeviceCallbackRoute, request)
 	if err != nil {
 		return response, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -67,7 +67,7 @@ func (client *deviceServiceCallbackClient) UpdateDeviceProfileCallback(ctx conte
 
 func (client *deviceServiceCallbackClient) AddProvisionWatcherCallback(ctx context.Context, request requests.AddProvisionWatcherRequest) (common.BaseResponse, errors.EdgeX) {
 	var response common.BaseResponse
-	err := utils.PostRequest(ctx, &response, client.baseUrl+v2.ApiWatcherCallbackRoute, request)
+	err := utils.PostRequestWithRawData(ctx, &response, client.baseUrl+v2.ApiWatcherCallbackRoute, request)
 	if err != nil {
 		return response, errors.NewCommonEdgeXWrapper(err)
 	}

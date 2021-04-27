@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
@@ -58,7 +57,6 @@ func TestFromReadingModelToDTO(t *testing.T) {
 	valid := models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           TestUUID,
-			Created:      TestTimestamp,
 			Origin:       TestTimestamp,
 			DeviceName:   TestDeviceName,
 			ResourceName: TestReadingName,
@@ -68,9 +66,7 @@ func TestFromReadingModelToDTO(t *testing.T) {
 		Value: TestValue,
 	}
 	expectedDTO := BaseReading{
-		Versionable:  common.Versionable{ApiVersion: v2.ApiVersion},
 		Id:           TestUUID,
-		Created:      TestTimestamp,
 		Origin:       TestTimestamp,
 		DeviceName:   TestDeviceName,
 		ResourceName: TestReadingName,
@@ -96,7 +92,6 @@ func TestFromReadingModelToDTO(t *testing.T) {
 }
 
 func TestNewSimpleReading(t *testing.T) {
-	expectedApiVersion := v2.ApiVersion
 	expectedDeviceName := TestDeviceName
 	expectedProfileName := TestDeviceProfileName
 	expectedResourceName := TestDeviceResourceName
@@ -138,14 +133,12 @@ func TestNewSimpleReading(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual, err := NewSimpleReading(expectedProfileName, expectedDeviceName, expectedResourceName, tt.expectedValueType, tt.value)
 			require.NoError(t, err)
-			assert.Equal(t, expectedApiVersion, actual.ApiVersion)
 			assert.NotEmpty(t, actual.Id)
 			assert.Equal(t, expectedProfileName, actual.ProfileName)
 			assert.Equal(t, expectedDeviceName, actual.DeviceName)
 			assert.Equal(t, expectedResourceName, actual.ResourceName)
 			assert.Equal(t, tt.expectedValueType, actual.ValueType)
 			assert.Equal(t, tt.expectedValue, actual.Value)
-			assert.Zero(t, actual.Created)
 			assert.NotZero(t, actual.Origin)
 		})
 	}
@@ -192,7 +185,6 @@ func TestNewSimpleReadingError(t *testing.T) {
 }
 
 func TestNewBinaryReading(t *testing.T) {
-	expectedApiVersion := v2.ApiVersion
 	expectedDeviceName := TestDeviceName
 	expectedProfileName := TestDeviceProfileName
 	expectedResourceName := TestDeviceResourceName
@@ -203,13 +195,11 @@ func TestNewBinaryReading(t *testing.T) {
 
 	actual := NewBinaryReading(expectedProfileName, expectedDeviceName, expectedResourceName, expectedBinaryValue, expectedMediaType)
 
-	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
 	assert.NotEmpty(t, actual.Id)
 	assert.Equal(t, expectedProfileName, actual.ProfileName)
 	assert.Equal(t, expectedDeviceName, actual.DeviceName)
 	assert.Equal(t, expectedResourceName, actual.ResourceName)
 	assert.Equal(t, expectedValueType, actual.ValueType)
 	assert.Equal(t, expectedBinaryValue, actual.BinaryValue)
-	assert.Zero(t, actual.Created)
 	assert.NotZero(t, actual.Origin)
 }

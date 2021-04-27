@@ -33,7 +33,7 @@ func NewProvisionWatcherClient(baseUrl string) interfaces.ProvisionWatcherClient
 }
 
 func (pwc ProvisionWatcherClient) Add(ctx context.Context, reqs []requests.AddProvisionWatcherRequest) (res []common.BaseWithIdResponse, err errors.EdgeX) {
-	err = utils.PostRequest(ctx, &res, pwc.baseUrl+v2.ApiProvisionWatcherRoute, reqs)
+	err = utils.PostRequestWithRawData(ctx, &res, pwc.baseUrl+v2.ApiProvisionWatcherRoute, reqs)
 	if err != nil {
 		return res, errors.NewCommonEdgeXWrapper(err)
 	}

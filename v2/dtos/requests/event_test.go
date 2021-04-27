@@ -14,13 +14,14 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
+	"github.com/fxamacker/cbor/v2"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func eventData() dtos.Event {
-	event := dtos.NewEvent(TestDeviceProfileName, TestDeviceName)
+	event := dtos.NewEvent(TestDeviceProfileName, TestDeviceName, TestSourceName)
 	event.Id = ExampleUUID
 	event.Origin = TestOriginTime
 	event.Tags = map[string]string{
@@ -53,6 +54,8 @@ func TestAddEventRequest_Validate(t *testing.T) {
 	noDeviceName.Event.DeviceName = ""
 	noProfileName := eventRequestData()
 	noProfileName.Event.ProfileName = ""
+	noSourceName := eventRequestData()
+	noSourceName.Event.SourceName = ""
 	noOrigin := eventRequestData()
 	noOrigin.Event.Origin = 0
 
@@ -98,6 +101,7 @@ func TestAddEventRequest_Validate(t *testing.T) {
 		{"invalid AddEventRequest, Event Id is not an uuid", invalidEventId, true},
 		{"invalid AddEventRequest, no DeviceName", noDeviceName, true},
 		{"invalid AddEventRequest, no ProfileName", noProfileName, true},
+		{"invalid AddEventRequest, no SourceName", noSourceName, true},
 		{"invalid AddEventRequest, no Origin", noOrigin, true},
 		{"invalid AddEventRequest, no Reading", noReading, true},
 		{"invalid AddEventRequest, no Reading DeviceName", invalidReadingNoDevice, true},
@@ -131,6 +135,8 @@ func TestAddEventRequest_Validate(t *testing.T) {
 	deviceNameWithUnreservedChar.Event.DeviceName = nameWithUnreservedChars
 	profileNameWithUnreservedChar := eventRequestData()
 	profileNameWithUnreservedChar.Event.ProfileName = nameWithUnreservedChars
+	sourceNameWithUnreservedChar := eventRequestData()
+	sourceNameWithUnreservedChar.Event.SourceName = nameWithUnreservedChars
 	readingDeviceNameWithUnreservedChar := eventRequestData()
 	readingDeviceNameWithUnreservedChar.Event.Readings[0].DeviceName = nameWithUnreservedChars
 	readingResourceNameWithUnreservedChar := eventRequestData()
@@ -142,6 +148,7 @@ func TestAddEventRequest_Validate(t *testing.T) {
 	testsForNameFields := []testForNameField{
 		{"Valid AddEventRequest with device name containing unreserved chars", deviceNameWithUnreservedChar, false},
 		{"Valid AddEventRequest with profile name containing unreserved chars", profileNameWithUnreservedChar, false},
+		{"Valid AddEventRequest with source name containing unreserved chars", sourceNameWithUnreservedChar, false},
 		{"Valid AddEventRequest with reading device name containing unreserved chars", readingDeviceNameWithUnreservedChar, false},
 		{"Valid AddEventRequest with reading resource name containing unreserved chars", readingResourceNameWithUnreservedChar, false},
 		{"Valid AddEventRequest with reading profile name containing unreserved chars", readingProfileNameWithUnreservedChar, false},
@@ -153,6 +160,8 @@ func TestAddEventRequest_Validate(t *testing.T) {
 		deviceNameWithReservedChar.Event.DeviceName = n
 		profileNameWithReservedChar := eventRequestData()
 		profileNameWithReservedChar.Event.ProfileName = n
+		sourceNameWithReservedChar := eventRequestData()
+		sourceNameWithReservedChar.Event.SourceName = n
 		readingDeviceNameWithReservedChar := eventRequestData()
 		readingDeviceNameWithReservedChar.Event.Readings[0].DeviceName = n
 		readingResourceNameWithReservedChar := eventRequestData()
@@ -163,6 +172,7 @@ func TestAddEventRequest_Validate(t *testing.T) {
 		testsForNameFields = append(testsForNameFields,
 			testForNameField{"Invalid AddEventRequest with device name containing reserved char", deviceNameWithReservedChar, true},
 			testForNameField{"Invalid AddEventRequest with profile name containing reserved char", profileNameWithReservedChar, true},
+			testForNameField{"Invalid AddEventRequest with source name containing reserved char", sourceNameWithReservedChar, true},
 			testForNameField{"Invalid AddEventRequest with reading device name containing reserved char", readingDeviceNameWithReservedChar, true},
 			testForNameField{"Invalid AddEventRequest with reading resource name containing reserved char", readingResourceNameWithReservedChar, true},
 			testForNameField{"Invalid AddEventRequest with reading profile name containing reserved char", readingProfileNameWithReservedChar, true},
@@ -225,6 +235,50 @@ func TestAddEvent_UnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestAddEvent_UnmarshalCBOR(t *testing.T) {
+	expected := eventRequestData()
+	expected.RequestId = ExampleUUID
+	validData, err := cbor.Marshal(expected)
+	require.NoError(t, err)
+
+	validValueTypeLowerCase := eventRequestData()
+	validValueTypeLowerCase.RequestId = ExampleUUID
+	validValueTypeLowerCase.Event.Readings[0].ValueType = "uint8"
+	validValueTypeLowerCaseData, err := cbor.Marshal(validValueTypeLowerCase)
+	require.NoError(t, err)
+
+	validValueTypeUpperCase := eventRequestData()
+	validValueTypeUpperCase.RequestId = ExampleUUID
+	validValueTypeUpperCase.Event.Readings[0].ValueType = "UINT8"
+	validValueTypeUpperCaseData, err := cbor.Marshal(validValueTypeUpperCase)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name    string
+		data    []byte
+		wantErr bool
+	}{
+		{"unmarshal AddEventRequest with success", validData, false},
+		{"unmarshal AddEventRequest with success, valid value type uint8", validValueTypeLowerCaseData, false},
+		{"unmarshal AddEventRequest with success, valid value type UINT8", validValueTypeUpperCaseData, false},
+		{"unmarshal invalid AddEventRequest, empty data", []byte{}, true},
+		{"unmarshal invalid AddEventRequest, string data", []byte("Invalid AddEventRequest"), true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var addEvent AddEventRequest
+			err := addEvent.UnmarshalCBOR(tt.data)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, expected, addEvent, "Unmarshal did not result in expected AddEventRequest.")
+			}
+		})
+	}
+}
+
 func Test_AddEventReqToEventModels(t *testing.T) {
 	valid := eventRequestData()
 	s := models.SimpleReading{
@@ -241,6 +295,7 @@ func Test_AddEventReqToEventModels(t *testing.T) {
 		Id:          ExampleUUID,
 		DeviceName:  TestDeviceName,
 		ProfileName: TestDeviceProfileName,
+		SourceName:  TestSourceName,
 		Origin:      TestOriginTime,
 		Readings:    []models.Reading{s},
 		Tags: map[string]string{
@@ -265,6 +320,7 @@ func Test_AddEventReqToEventModels(t *testing.T) {
 func TestNewAddEventRequest(t *testing.T) {
 	expectedProfileName := TestDeviceProfileName
 	expectedDeviceName := TestDeviceName
+	expectedSourceName := TestSourceName
 	expectedApiVersion := v2.ApiVersion
 
 	actual := NewAddEventRequest(eventData())
@@ -275,7 +331,7 @@ func TestNewAddEventRequest(t *testing.T) {
 	assert.NotEmpty(t, actual.Event.Id)
 	assert.Equal(t, expectedProfileName, actual.Event.ProfileName)
 	assert.Equal(t, expectedDeviceName, actual.Event.DeviceName)
+	assert.Equal(t, expectedSourceName, actual.Event.SourceName)
 	assert.NotZero(t, len(actual.Event.Readings))
-	assert.Zero(t, actual.Event.Created)
 	assert.NotZero(t, actual.Event.Origin)
 }

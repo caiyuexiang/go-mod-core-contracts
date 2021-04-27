@@ -29,7 +29,7 @@ func (dp DeviceProfileRequest) Validate() error {
 	if err != nil {
 		return err
 	}
-	return dtos.ValidateDeviceProfileDTO(dp.Profile)
+	return dp.Profile.Validate()
 }
 
 // UnmarshalJSON implements the Unmarshaler interface for the DeviceProfileRequest type
@@ -75,7 +75,6 @@ func DeviceProfileReqToDeviceProfileModels(addRequests []DeviceProfileRequest) (
 }
 
 func NewDeviceProfileRequest(dto dtos.DeviceProfile) DeviceProfileRequest {
-	dto.Versionable = common.NewVersionable()
 	return DeviceProfileRequest{
 		BaseRequest: common.NewBaseRequest(),
 		Profile:     dto,

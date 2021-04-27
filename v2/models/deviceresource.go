@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -11,7 +11,8 @@ package models
 type DeviceResource struct {
 	Description string
 	Name        string
+	IsHidden    bool
 	Tag         string
-	Properties  PropertyValue
-	Attributes  map[string]string
+	Properties  ResourceProperties
+	Attributes  map[string]interface{}
 }

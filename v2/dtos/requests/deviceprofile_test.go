@@ -20,7 +20,7 @@ import (
 )
 
 var testLabels = []string{"MODBUS", "TEMP"}
-var testAttributes = map[string]string{
+var testAttributes = map[string]interface{}{
 	"TestAttribute": "TestAttributeValue",
 }
 
@@ -30,24 +30,17 @@ func profileData() DeviceProfileRequest {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
+		Properties: dtos.ResourceProperties{
 			ValueType: v2.ValueTypeInt16,
-			ReadWrite: "RW",
+			ReadWrite: v2.ReadWrite_RW,
 		},
 	}}
 	var testDeviceCommands = []dtos.DeviceCommand{{
-		Name: TestDeviceCommandName,
-		Get: []dtos.ResourceOperation{{
+		Name:      TestDeviceCommandName,
+		ReadWrite: v2.ReadWrite_RW,
+		ResourceOperations: []dtos.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
-		Set: []dtos.ResourceOperation{{
-			DeviceResource: TestDeviceResourceName,
-		}},
-	}}
-	var testCoreCommands = []dtos.Command{{
-		Name: TestDeviceCommandName,
-		Get:  true,
-		Set:  true,
 	}}
 	return DeviceProfileRequest{
 		BaseRequest: common.BaseRequest{
@@ -55,7 +48,6 @@ func profileData() DeviceProfileRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Profile: dtos.DeviceProfile{
-			Versionable:     common.NewVersionable(),
 			Name:            TestDeviceProfileName,
 			Manufacturer:    TestManufacturer,
 			Description:     TestDescription,
@@ -63,7 +55,6 @@ func profileData() DeviceProfileRequest {
 			Labels:          testLabels,
 			DeviceResources: testDeviceResources,
 			DeviceCommands:  testDeviceCommands,
-			CoreCommands:    testCoreCommands,
 		},
 	}
 }
@@ -79,24 +70,17 @@ var expectedDeviceProfile = models.DeviceProfile{
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: models.PropertyValue{
+		Properties: models.ResourceProperties{
 			ValueType: v2.ValueTypeInt16,
-			ReadWrite: "RW",
+			ReadWrite: v2.ReadWrite_RW,
 		},
 	}},
 	DeviceCommands: []models.DeviceCommand{{
-		Name: TestDeviceCommandName,
-		Get: []models.ResourceOperation{{
+		Name:      TestDeviceCommandName,
+		ReadWrite: v2.ReadWrite_RW,
+		ResourceOperations: []models.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
-		Set: []models.ResourceOperation{{
-			DeviceResource: TestDeviceResourceName,
-		}},
-	}},
-	CoreCommands: []models.Command{{
-		Name: TestDeviceCommandName,
-		Get:  true,
-		Set:  true,
 	}},
 }
 
@@ -113,11 +97,10 @@ func TestDeviceProfileRequest_Validate(t *testing.T) {
 	noDeviceResourcePropertyType.Profile.DeviceResources[0].Properties.ValueType = emptyString
 	invalidDeviceResourcePropertyType := profileData()
 	invalidDeviceResourcePropertyType.Profile.DeviceResources[0].Properties.ValueType = "BadType"
-	noCommandName := profileData()
-	noCommandName.Profile.CoreCommands[0].Name = emptyString
-	noEnabledCommand := profileData()
-	noEnabledCommand.Profile.CoreCommands[0].Get = false
-	noEnabledCommand.Profile.CoreCommands[0].Set = false
+	noDeviceResourceReadWrite := profileData()
+	noDeviceResourceReadWrite.Profile.DeviceResources[0].Properties.ReadWrite = emptyString
+	invalidDeviceResourceReadWrite := profileData()
+	invalidDeviceResourceReadWrite.Profile.DeviceResources[0].Properties.ReadWrite = "invalid"
 
 	tests := []struct {
 		name          string
@@ -130,8 +113,8 @@ func TestDeviceProfileRequest_Validate(t *testing.T) {
 		{"invalid DeviceProfileRequest, no deviceResource name", noDeviceResourceName, true},
 		{"invalid DeviceProfileRequest, no deviceResource property type", noDeviceResourcePropertyType, true},
 		{"invalid DeviceProfileRequest, invalid deviceResource property type", invalidDeviceResourcePropertyType, true},
-		{"invalid DeviceProfileRequest, no command name", noCommandName, true},
-		{"invalid DeviceProfileRequest, no enabled command ", noEnabledCommand, true},
+		{"invalid DeviceProfileRequest, no deviceResource property readWrite", noDeviceResourceReadWrite, true},
+		{"invalid DeviceProfileRequest, invalid deviceResource property readWrite", invalidDeviceResourcePropertyType, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -211,5 +194,4 @@ func TestNewDeviceProfileRequest(t *testing.T) {
 	actual := NewDeviceProfileRequest(dtos.DeviceProfile{})
 
 	assert.Equal(t, expectedApiVersion, actual.ApiVersion)
-	assert.Equal(t, expectedApiVersion, actual.Profile.ApiVersion)
 }

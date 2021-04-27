@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,7 +12,7 @@ type Event struct {
 	Id          string
 	DeviceName  string
 	ProfileName string
-	Created     int64
+	SourceName  string
 	Origin      int64
 	Readings    []Reading
 	Tags        map[string]string

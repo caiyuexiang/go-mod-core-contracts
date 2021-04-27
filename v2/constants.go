@@ -10,15 +10,15 @@ const (
 	ApiVersion = "v2"
 	ApiBase    = "/api/v2"
 
-	ApiEventRoute                      = ApiBase + "/event"
-	ApiEventProfileNameDeviceNameRoute = ApiEventRoute + "/{" + ProfileName + "}" + "/{" + DeviceName + "}"
-	ApiAllEventRoute                   = ApiEventRoute + "/" + All
-	ApiEventIdRoute                    = ApiEventRoute + "/" + Id + "/{" + Id + "}"
-	ApiEventCountRoute                 = ApiEventRoute + "/" + Count
-	ApiEventCountByDeviceNameRoute     = ApiEventCountRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
-	ApiEventByDeviceNameRoute          = ApiEventRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
-	ApiEventByTimeRangeRoute           = ApiEventRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
-	ApiEventByAgeRoute                 = ApiEventRoute + "/" + Age + "/{" + Age + "}"
+	ApiEventRoute                                = ApiBase + "/event"
+	ApiEventProfileNameDeviceNameSourceNameRoute = ApiEventRoute + "/{" + ProfileName + "}" + "/{" + DeviceName + "}" + "/{" + SourceName + "}"
+	ApiAllEventRoute                             = ApiEventRoute + "/" + All
+	ApiEventIdRoute                              = ApiEventRoute + "/" + Id + "/{" + Id + "}"
+	ApiEventCountRoute                           = ApiEventRoute + "/" + Count
+	ApiEventCountByDeviceNameRoute               = ApiEventCountRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiEventByDeviceNameRoute                    = ApiEventRoute + "/" + Device + "/" + Name + "/{" + Name + "}"
+	ApiEventByTimeRangeRoute                     = ApiEventRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
+	ApiEventByAgeRoute                           = ApiEventRoute + "/" + Age + "/{" + Age + "}"
 
 	ApiReadingRoute                  = ApiBase + "/reading"
 	ApiAllReadingRoute               = ApiReadingRoute + "/" + All
@@ -36,6 +36,9 @@ const (
 	ApiDeviceProfileByManufacturerRoute         = ApiDeviceProfileRoute + "/" + Manufacturer + "/{" + Manufacturer + "}"
 	ApiDeviceProfileByModelRoute                = ApiDeviceProfileRoute + "/" + Model + "/{" + Model + "}"
 	ApiDeviceProfileByManufacturerAndModelRoute = ApiDeviceProfileRoute + "/" + Manufacturer + "/{" + Manufacturer + "}" + "/" + Model + "/{" + Model + "}"
+
+	ApiDeviceResourceRoute                     = ApiBase + "/deviceresource"
+	ApiDeviceResourceByProfileAndResourceRoute = ApiDeviceResourceRoute + "/" + Profile + "/{" + ProfileName + "}" + "/" + Resource + "/{" + ResourceName + "}"
 
 	ApiDeviceServiceRoute       = ApiBase + "/deviceservice"
 	ApiAllDeviceServiceRoute    = ApiDeviceServiceRoute + "/" + All
@@ -68,6 +71,25 @@ const (
 	ApiSubscriptionByLabelRoute    = ApiSubscriptionRoute + "/" + Label + "/{" + Label + "}"
 	ApiSubscriptionByReceiverRoute = ApiSubscriptionRoute + "/" + Receiver + "/{" + Receiver + "}"
 
+	ApiNotificationCleanupRoute            = ApiBase + "/cleanup"
+	ApiNotificationCleanupByAgeRoute       = ApiBase + "/" + Cleanup + "/" + Age + "/{" + Age + "}"
+	ApiNotificationRoute                   = ApiBase + "/notification"
+	ApiNotificationByTimeRangeRoute        = ApiNotificationRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
+	ApiNotificationByAgeRoute              = ApiNotificationRoute + "/" + Age + "/{" + Age + "}"
+	ApiNotificationByCategoryRoute         = ApiNotificationRoute + "/" + Category + "/{" + Category + "}"
+	ApiNotificationByLabelRoute            = ApiNotificationRoute + "/" + Label + "/{" + Label + "}"
+	ApiNotificationByIdRoute               = ApiNotificationRoute + "/" + Id + "/{" + Id + "}"
+	ApiNotificationByStatusRoute           = ApiNotificationRoute + "/" + Status + "/{" + Status + "}"
+	ApiNotificationBySubscriptionNameRoute = ApiNotificationRoute + "/" + Subscription + "/" + Name + "/{" + Name + "}"
+
+	ApiTransmissionRoute                   = ApiBase + "/transmission"
+	ApiTransmissionByIdRoute               = ApiTransmissionRoute + "/" + Id + "/{" + Id + "}"
+	ApiTransmissionByAgeRoute              = ApiTransmissionRoute + "/" + "/" + Age + "/{" + Age + "}"
+	ApiAllTransmissionRoute                = ApiTransmissionRoute + "/" + All
+	ApiTransmissionBySubscriptionNameRoute = ApiTransmissionRoute + "/" + Subscription + "/" + Name + "/{" + Name + "}"
+	ApiTransmissionByTimeRangeRoute        = ApiTransmissionRoute + "/" + Start + "/{" + Start + "}/" + End + "/{" + End + "}"
+	ApiTransmissionByStatusRoute           = ApiTransmissionRoute + "/" + Status + "/{" + Status + "}"
+
 	ApiConfigRoute  = ApiBase + "/config"
 	ApiMetricsRoute = ApiBase + "/metrics"
 	ApiPingRoute    = ApiBase + "/ping"
@@ -82,9 +104,13 @@ const (
 	ApiServiceCallbackRoute     = ApiBase + "/callback/service"
 	ApiDiscoveryRoute           = ApiBase + "/discovery"
 
-	ApiIntervalRoute       = ApiBase + "/interval"
-	ApiAllIntervalRoute    = ApiIntervalRoute + "/" + All
-	ApiIntervalByNameRoute = ApiIntervalRoute + "/" + Name + "/{" + Name + "}"
+	ApiIntervalRoute               = ApiBase + "/interval"
+	ApiAllIntervalRoute            = ApiIntervalRoute + "/" + All
+	ApiIntervalByNameRoute         = ApiIntervalRoute + "/" + Name + "/{" + Name + "}"
+	ApiIntervalActionRoute         = ApiBase + "/intervalaction"
+	ApiAllIntervalActionRoute      = ApiIntervalActionRoute + "/" + All
+	ApiIntervalActionByNameRoute   = ApiIntervalActionRoute + "/" + Name + "/{" + Name + "}"
+	ApiIntervalActionByTargetRoute = ApiIntervalActionRoute + "/" + Target + "/{" + Target + "}"
 )
 
 // Constants related to defined url path names and parameters in the v2 service APIs
@@ -94,15 +120,18 @@ const (
 	Created      = "created"
 	Modified     = "modified"
 	Pushed       = "pushed"
+	Origin       = "origin"
 	Count        = "count"
 	Device       = "device"
 	DeviceId     = "deviceId"
 	DeviceName   = "deviceName"
 	Check        = "check"
 	Profile      = "profile"
+	Resource     = "resource"
 	Service      = "service"
 	Command      = "command"
 	ProfileName  = "profileName"
+	SourceName   = "sourceName"
 	ServiceName  = "serviceName"
 	ResourceName = "resourceName"
 	Start        = "start"
@@ -118,6 +147,12 @@ const (
 	Category     = "category"
 	Receiver     = "receiver"
 	Subscription = "subscription"
+	Target       = "target"
+	Status       = "status"
+	Cleanup      = "cleanup"
+	Sender       = "sender"
+	Severity     = "severity"
+	Interval     = "interval"
 
 	Offset      = "offset"         //query string to specify the number of items to skip before starting to collect the result set.
 	Limit       = "limit"          //query string to specify the numbers of items to return
@@ -133,6 +168,8 @@ const (
 	CommaSeparator = ","
 	ValueYes       = "yes"
 	ValueNo        = "no"
+	ValueTrue      = "true"
+	ValueFalse     = "false"
 )
 
 // Constants related to Reading ValueTypes
@@ -162,4 +199,30 @@ const (
 	ValueTypeInt64Array   = "Int64Array"
 	ValueTypeFloat32Array = "Float32Array"
 	ValueTypeFloat64Array = "Float64Array"
+)
+
+// Constants related to configuration file's map key
+const (
+	Primary  = "Primary"
+	Password = "Password"
+)
+
+// Constants for Address
+const (
+	// Type
+	REST  = "REST"
+	MQTT  = "MQTT"
+	EMAIL = "EMAIL"
+)
+
+// Constants for DeviceProfile
+const (
+	ReadWrite_R  = "R"
+	ReadWrite_W  = "W"
+	ReadWrite_RW = "RW"
+)
+
+// Constants for Edgex Environment variable
+const (
+	EnvEncodeAllEvents = "EDGEX_ENCODE_ALL_EVENTS_CBOR"
 )

@@ -28,7 +28,7 @@ func NewDeviceClient(baseUrl string) interfaces.DeviceClient {
 }
 
 func (dc DeviceClient) Add(ctx context.Context, reqs []requests.AddDeviceRequest) (res []common.BaseWithIdResponse, err errors.EdgeX) {
-	err = utils.PostRequest(ctx, &res, dc.baseUrl+v2.ApiDeviceRoute, reqs)
+	err = utils.PostRequestWithRawData(ctx, &res, dc.baseUrl+v2.ApiDeviceRoute, reqs)
 	if err != nil {
 		return res, errors.NewCommonEdgeXWrapper(err)
 	}

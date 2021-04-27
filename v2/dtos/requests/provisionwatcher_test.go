@@ -32,7 +32,6 @@ var testAddProvisionWatcher = AddProvisionWatcherRequest{
 		Versionable: common.NewVersionable(),
 	},
 	ProvisionWatcher: dtos.ProvisionWatcher{
-		Versionable:         common.NewVersionable(),
 		Name:                testProvisionWatcherName,
 		Labels:              testProvisionWatcherLabels,
 		Identifiers:         testIdentifiers,
@@ -59,7 +58,6 @@ func mockUpdateProvisionWatcher() dtos.UpdateProvisionWatcher {
 	testDeviceServiceName := TestDeviceServiceName
 	testProfileName := TestDeviceProfileName
 	d := dtos.UpdateProvisionWatcher{}
-	d.Versionable = common.NewVersionable()
 	d.Id = &testId
 	d.Name = &testName
 	d.Labels = testProvisionWatcherLabels
@@ -100,11 +98,11 @@ func TestAddProvisionWatcherRequest_Validate(t *testing.T) {
 	noProfileName.ProvisionWatcher.ProfileName = emptyString
 	invalidFrequency := testAddProvisionWatcher
 	invalidFrequency.ProvisionWatcher.AutoEvents = []dtos.AutoEvent{
-		{Resource: "TestDevice", Frequency: "-1", OnChange: true},
+		{SourceName: "TestDevice", Frequency: "-1", OnChange: true},
 	}
 	noAutoEventFrequency := testAddProvisionWatcher
 	noAutoEventFrequency.ProvisionWatcher.AutoEvents = []dtos.AutoEvent{
-		{Resource: "TestDevice", OnChange: true},
+		{SourceName: "TestDevice", OnChange: true},
 	}
 	noAutoEventResource := testAddProvisionWatcher
 	noAutoEventResource.ProvisionWatcher.AutoEvents = []dtos.AutoEvent{
@@ -186,7 +184,7 @@ func TestAddProvisionWatcherReqToProvisionWatcherModels(t *testing.T) {
 			ProfileName: TestDeviceProfileName,
 			AdminState:  models.Locked,
 			AutoEvents: []models.AutoEvent{
-				{Resource: "TestDevice", Frequency: "300ms", OnChange: true},
+				{SourceName: "TestDevice", Frequency: "300ms", OnChange: true},
 			},
 		},
 	}
